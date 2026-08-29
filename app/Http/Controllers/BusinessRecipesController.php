@@ -19,6 +19,10 @@ class BusinessRecipesController extends Controller
     {
         $user = auth()->user();
         $isManager = $user->isManager();
+        // Cost, profit, and margin are business intelligence a staff account
+        // has no operational need to see -- they need ingredient/quantity
+        // data to prep a product, not what it costs the business to make it.
+        $canSeeCosts = $user->isSuperAdmin() || $isManager;
 
         $branches = Branch::when($isManager, fn ($q) => $q->where('id', $user->branch_id))
             ->orderBy('name')
@@ -32,8 +36,10 @@ class BusinessRecipesController extends Controller
 
         $this->markAvailability($products, $branches->pluck('id'));
 
-        foreach ($products as $product) {
-            $product->cost_breakdown = $this->costBreakdown($product)['sizes'];
+        if ($canSeeCosts) {
+            foreach ($products as $product) {
+                $product->cost_breakdown = $this->costBreakdown($product)['sizes'];
+            }
         }
 
         $allIngredients = Ingredient::orderBy('name')->get();
@@ -43,6 +49,7 @@ class BusinessRecipesController extends Controller
             'categories'      => $categories,
             'products'        => $products,
             'allIngredients'  => $allIngredients,
+            'canSeeCosts'     => $canSeeCosts,
         ]);
     }
 
@@ -169,6 +176,9 @@ class BusinessRecipesController extends Controller
      */
     public function ingredientProfile(Product $product): JsonResponse
     {
+        $user = Auth::user();
+        abort_unless($user->isSuperAdmin() || $user->isManager(), 403, 'You do not have permission to view cost data.');
+
         $product->load('recipes.ingredient.suppliers');
 
         $breakdown = $this->costBreakdown($product);

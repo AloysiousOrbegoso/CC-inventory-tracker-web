@@ -239,8 +239,10 @@
 
             <div class="flex items-center gap-3 justify-end px-6 py-3.5 border-t border-line bg-[rgba(92,45,27,.02)]">
                 <span class="text-xs font-semibold opacity-60 mr-auto">{{ $product->recipes->count() }} ingredient{{ $product->recipes->count() !== 1 ? 's' : '' }}</span>
-                <button class="px-5 py-[7px] bg-accent text-white border-[1.5px] border-accent rounded-lg text-xs font-semibold cursor-pointer font-sans transition-all duration-150 hover:brightness-[.92]" onclick="openProfile({{ $product->id }})">Profile</button>
-                <button class="btn-edit px-5 py-[7px] bg-white text-[#5c2d1b] border-[1.5px] border-line rounded-lg text-xs font-semibold cursor-pointer font-sans transition-all duration-150 hover:bg-[#5c2d1b] hover:text-cream hover:border-[#5c2d1b]" data-product-id="{{ $product->id }}">Edit</button>
+                @if ($canSeeCosts)
+                    <button class="px-5 py-[7px] bg-accent text-white border-[1.5px] border-accent rounded-lg text-xs font-semibold cursor-pointer font-sans transition-all duration-150 hover:brightness-[.92]" onclick="openProfile({{ $product->id }})">Profile</button>
+                    <button class="btn-edit px-5 py-[7px] bg-white text-[#5c2d1b] border-[1.5px] border-line rounded-lg text-xs font-semibold cursor-pointer font-sans transition-all duration-150 hover:bg-[#5c2d1b] hover:text-cream hover:border-[#5c2d1b]" data-product-id="{{ $product->id }}">Edit</button>
+                @endif
             </div>
         </div>
         @empty
