@@ -293,7 +293,12 @@ Route::middleware('auth')->group(function () {
         ->name('staff.mark-clean-done');
     Route::post('/staff/close-shift', [\App\Http\Controllers\StaffDashboardController::class, 'closeShift'])
         ->name('staff.close-shift');
-    Route::get('/recipes', \App\Http\Controllers\BusinessRecipesController::class)->name('recipes');
+    // Recipes expose cost/margin data and edit controls -- owner/manager
+    // only, same reasoning as /dashboard: staff have no equivalent page to
+    // redirect to here, so the sidebar link is hidden for them instead.
+    Route::get('/recipes', \App\Http\Controllers\BusinessRecipesController::class)
+        ->name('recipes')
+        ->middleware('role:super_admin,manager');
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory');
     Route::get('/branches', [BranchesController::class, 'index'])->name('branches');
     Route::post('/branches', [BranchesController::class, 'store'])->name('branches.store');
@@ -309,7 +314,8 @@ Route::middleware('auth')->group(function () {
 
     // ── Business Pages (static structural placeholders) ───────────────
     Route::get('/business/recipes', \App\Http\Controllers\BusinessRecipesController::class)
-        ->name('business.recipes');
+        ->name('business.recipes')
+        ->middleware('role:super_admin,manager');
 
     Route::get('/business/summary', \App\Http\Controllers\BusinessSummaryController::class)
         ->name('business.summary');
@@ -358,20 +364,22 @@ Route::middleware('auth')->group(function () {
     })->name('business.workers');
 
     // ── Recipe CRUD (AJAX endpoints — session auth) ────────────────────
-    Route::get('/business/recipes/product/{product}/data', [\App\Http\Controllers\BusinessRecipesController::class, 'getProductData'])
-        ->name('business.recipes.product.data');
-    Route::get('/business/recipes/product/{product}/profile', [\App\Http\Controllers\BusinessRecipesController::class, 'ingredientProfile'])
-        ->name('business.recipes.product.profile');
-    Route::put('/business/recipes/product/{product}', [\App\Http\Controllers\BusinessRecipesController::class, 'updateProduct'])
-        ->name('business.recipes.product.update');
-    Route::post('/business/recipes/product/{product}/ingredient', [\App\Http\Controllers\BusinessRecipesController::class, 'addIngredient'])
-        ->name('business.recipes.ingredient.add');
-    Route::put('/business/recipes/ingredient/{recipe}', [\App\Http\Controllers\BusinessRecipesController::class, 'updateIngredient'])
-        ->name('business.recipes.ingredient.update');
-    Route::post('/business/recipes/ingredient/{recipe}/delete', [\App\Http\Controllers\BusinessRecipesController::class, 'removeIngredient'])
-        ->name('business.recipes.ingredient.remove');
-    Route::post('/business/recipes/product/{product}/delete', [\App\Http\Controllers\BusinessRecipesController::class, 'destroyProduct'])
-        ->name('business.recipes.product.delete');
+    Route::middleware('role:super_admin,manager')->group(function () {
+        Route::get('/business/recipes/product/{product}/data', [\App\Http\Controllers\BusinessRecipesController::class, 'getProductData'])
+            ->name('business.recipes.product.data');
+        Route::get('/business/recipes/product/{product}/profile', [\App\Http\Controllers\BusinessRecipesController::class, 'ingredientProfile'])
+            ->name('business.recipes.product.profile');
+        Route::put('/business/recipes/product/{product}', [\App\Http\Controllers\BusinessRecipesController::class, 'updateProduct'])
+            ->name('business.recipes.product.update');
+        Route::post('/business/recipes/product/{product}/ingredient', [\App\Http\Controllers\BusinessRecipesController::class, 'addIngredient'])
+            ->name('business.recipes.ingredient.add');
+        Route::put('/business/recipes/ingredient/{recipe}', [\App\Http\Controllers\BusinessRecipesController::class, 'updateIngredient'])
+            ->name('business.recipes.ingredient.update');
+        Route::post('/business/recipes/ingredient/{recipe}/delete', [\App\Http\Controllers\BusinessRecipesController::class, 'removeIngredient'])
+            ->name('business.recipes.ingredient.remove');
+        Route::post('/business/recipes/product/{product}/delete', [\App\Http\Controllers\BusinessRecipesController::class, 'destroyProduct'])
+            ->name('business.recipes.product.delete');
+    });
 
     // ── Workers CRUD (AJAX endpoints) ───────────────────────────────────
     Route::post('/business/workers', [\App\Http\Controllers\WorkersController::class, 'store'])

@@ -26,25 +26,27 @@ class RecipeCostHiddenFromStaffTest extends TestCase
         return $product;
     }
 
-    public function test_staff_sees_no_cost_breakdown_on_the_recipes_page(): void
+    public function test_staff_cannot_reach_the_recipes_page_at_all(): void
+    {
+        $branch = Branch::factory()->create();
+        $staff = User::factory()->create(['role' => User::ROLE_STAFF, 'branch_id' => $branch->id]);
+
+        $this->actingAs($staff)->get('/business/recipes')->assertForbidden();
+        $this->actingAs($staff)->get('/recipes')->assertForbidden();
+    }
+
+    public function test_staff_cannot_reach_the_recipe_crud_endpoints(): void
     {
         $branch = Branch::factory()->create();
         $staff = User::factory()->create(['role' => User::ROLE_STAFF, 'branch_id' => $branch->id]);
         $product = $this->makeProductWithCost();
 
-        $response = $this->actingAs($staff)->get('/business/recipes');
-
-        $response->assertOk();
-        $products = $response->viewData('products');
-        $this->assertNull($products->firstWhere('id', $product->id)->cost_breakdown);
-        // "Profile" only appears as the button's own visible label, unlike
-        // "Margin" which also shows up inert inside the page's <script>
-        // block (openProfile/renderProfile are still defined, just never
-        // triggered without the button) -- so this is the precise check.
-        $response->assertDontSee('>Profile<', false);
+        $this->actingAs($staff)->getJson("/business/recipes/product/{$product->id}/data")->assertForbidden();
+        $this->actingAs($staff)->getJson("/business/recipes/product/{$product->id}/profile")->assertForbidden();
+        $this->actingAs($staff)->putJson("/business/recipes/product/{$product->id}", ['price' => 999])->assertForbidden();
     }
 
-    public function test_manager_still_sees_cost_breakdown(): void
+    public function test_manager_can_still_reach_the_recipes_page_with_cost_data(): void
     {
         $branch = Branch::factory()->create();
         $manager = User::factory()->manager()->create(['branch_id' => $branch->id]);
@@ -57,17 +59,6 @@ class RecipeCostHiddenFromStaffTest extends TestCase
         $this->assertNotNull($products->firstWhere('id', $product->id)->cost_breakdown);
         $response->assertSee('Margin');
         $response->assertSee('Profile');
-    }
-
-    public function test_staff_cannot_hit_the_ingredient_profile_endpoint_directly(): void
-    {
-        $branch = Branch::factory()->create();
-        $staff = User::factory()->create(['role' => User::ROLE_STAFF, 'branch_id' => $branch->id]);
-        $product = $this->makeProductWithCost();
-
-        $response = $this->actingAs($staff)->getJson("/business/recipes/product/{$product->id}/profile");
-
-        $response->assertForbidden();
     }
 
     public function test_manager_can_still_hit_the_ingredient_profile_endpoint(): void
