@@ -139,7 +139,7 @@
     </div>
 
     <nav class="sidebar__nav">
-        <a href="{{ route('dashboard') }}" class="sidebar__link {{ $currentRoute === 'dashboard' ? 'is-active' : '' }}">
+        <a href="{{ $user->isStaff() ? route('staff.dashboard') : route('dashboard') }}" class="sidebar__link {{ in_array($currentRoute, ['dashboard', 'staff.dashboard']) ? 'is-active' : '' }}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
             Dashboard
         </a>

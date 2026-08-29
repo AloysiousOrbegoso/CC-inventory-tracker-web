@@ -16,15 +16,15 @@ class NoticesController extends Controller
     public function index(): View
     {
         $user = auth()->user();
-        $isManager = $user->isManager();
-        $branchId = $isManager ? $user->branch_id : null;
+        $isBranchScoped = ! $user->isSuperAdmin();
+        $branchId = $isBranchScoped ? $user->branch_id : null;
 
         $notices = Notice::with('branch', 'poster')
-            ->when($isManager, fn ($q) => $q->where(fn ($q2) => $q2->where('branch_id', $branchId)->orWhereNull('branch_id')))
+            ->when($isBranchScoped, fn ($q) => $q->where(fn ($q2) => $q2->where('branch_id', $branchId)->orWhereNull('branch_id')))
             ->latest()
             ->get();
 
-        $branches = Branch::when($isManager, fn ($q) => $q->where('id', $branchId))->orderBy('name')->get();
+        $branches = Branch::when($isBranchScoped, fn ($q) => $q->where('id', $branchId))->orderBy('name')->get();
 
         return view('notices.index', compact('notices', 'branches'));
     }

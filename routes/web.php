@@ -61,7 +61,12 @@ Route::post('/login', function () {
 // ── Authenticated Pages ──────────────────────────────────────────────
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    // Staff have their own scoped /staff/dashboard (see below); this one shows
+    // company-wide financials and every branch's alerts, so it's owner/manager
+    // only -- login already redirects staff elsewhere, this closes the
+    // direct-URL/sidebar-link gap that bypassed that.
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')
+        ->middleware('role:super_admin,manager');
 
     // ── Static Pages ──────────────────────────────────────────────────
     Route::get('/help-center', fn () => view('pages.help-center'))->name('help-center');
