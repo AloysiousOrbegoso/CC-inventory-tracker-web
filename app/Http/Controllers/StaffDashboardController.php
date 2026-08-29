@@ -64,6 +64,9 @@ class StaffDashboardController extends Controller
             'branch' => $branch,
             'openShift' => $openShift,
             'hasVerifiedStock' => $hasVerifiedStock,
+            'hasVerifiedTill' => $openShift && $openShift->opening_till_amount !== null,
+            'hasCompletedPrep' => $openShift && $openShift->prep_completed_at !== null,
+            'hasCompletedClean' => $openShift && $openShift->cleaning_completed_at !== null,
             'totalStaff' => $totalStaff,
             'clockedIn' => $clockedIn,
             'transactionsToday' => $transactionsToday,
@@ -139,6 +142,64 @@ class StaffDashboardController extends Controller
         }
 
         return redirect()->route('staff.dashboard')->with('status', 'Stock verified for this shift.');
+    }
+
+    /**
+     * Records the starting cash-drawer count for the open shift.
+     */
+    public function verifyTill(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'till_amount' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        $openShift = ShiftLog::where('user_id', $user->id)->where('status', 'open')->latest('shift_start')->first();
+
+        if (! $openShift) {
+            return redirect()->route('staff.dashboard')->with('status', 'Open your shift first.');
+        }
+
+        $openShift->update(['opening_till_amount' => $validated['till_amount']]);
+
+        return redirect()->route('staff.dashboard')->with('status', 'Till amount verified.');
+    }
+
+    /**
+     * Marks the "Prep and Set-up" pre-opening task done for the open shift.
+     */
+    public function markPrepDone(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        $openShift = ShiftLog::where('user_id', $user->id)->where('status', 'open')->latest('shift_start')->first();
+
+        if (! $openShift) {
+            return redirect()->route('staff.dashboard')->with('status', 'Open your shift first.');
+        }
+
+        $openShift->update(['prep_completed_at' => now()]);
+
+        return redirect()->route('staff.dashboard')->with('status', 'Prep and set-up marked done.');
+    }
+
+    /**
+     * Marks the "Clean" task done for the open shift.
+     */
+    public function markCleanDone(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        $openShift = ShiftLog::where('user_id', $user->id)->where('status', 'open')->latest('shift_start')->first();
+
+        if (! $openShift) {
+            return redirect()->route('staff.dashboard')->with('status', 'Open your shift first.');
+        }
+
+        $openShift->update(['cleaning_completed_at' => now()]);
+
+        return redirect()->route('staff.dashboard')->with('status', 'Cleaning marked done.');
     }
 
     /**

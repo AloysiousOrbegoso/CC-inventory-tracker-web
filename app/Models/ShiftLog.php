@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['branch_id', 'user_id', 'shift_start', 'shift_end', 'status'])]
+#[Fillable(['branch_id', 'user_id', 'shift_start', 'shift_end', 'status', 'opening_till_amount', 'prep_completed_at', 'cleaning_completed_at'])]
 class ShiftLog extends Model
 {
     use HasFactory;
@@ -18,6 +18,9 @@ class ShiftLog extends Model
         return [
             'shift_start' => 'datetime',
             'shift_end' => 'datetime',
+            'opening_till_amount' => 'decimal:2',
+            'prep_completed_at' => 'datetime',
+            'cleaning_completed_at' => 'datetime',
         ];
     }
 

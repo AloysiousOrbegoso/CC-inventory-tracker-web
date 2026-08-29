@@ -142,6 +142,13 @@
         .action-btn:hover { border-color: var(--terra); color: var(--terra); }
         .action-btn--danger { color: #c8433f; border-color: rgba(200,67,63,.35); }
         .action-btn--danger:hover { background: #c8433f; color: #fff; border-color: #c8433f; }
+        .action-btn.is-done { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+        .action-btn:disabled { opacity: .45; cursor: not-allowed; }
+        .action-btn:disabled:hover { border-color: var(--border); color: var(--brown); }
+
+        .till-row { display: flex; align-items: center; gap: 10px; padding: 6px 0 14px; }
+        .till-row label { font-size: 13px; font-weight: 600; flex-shrink: 0; }
+        .till-row input { flex: 1; padding: 9px 10px; border: 1.5px solid var(--border); border-radius: 8px; font-family: var(--font); font-size: 15px; }
 
         @media (max-width: 600px) {
             .task-row, .stat-row, .action-row { grid-template-columns: repeat(2, 1fr); }
@@ -209,8 +216,12 @@
 
     <div class="section-title">Proceed with the pre-opening tasks</div>
     <div class="task-row">
-        <button type="button" class="task-btn" onclick="comingSoon('Verify Till Amount')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/></svg>
+        <button type="button" class="task-btn {{ $hasVerifiedTill ? 'is-done' : '' }}" onclick="openVerifyTillModal()" {{ $openShift ? '' : 'disabled title="Open your shift first"' }}>
+            @if ($hasVerifiedTill)
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            @else
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/></svg>
+            @endif
             Verify Till Amount
         </button>
 
@@ -226,10 +237,17 @@
             </button>
         </form>
 
-        <button type="button" class="task-btn" onclick="comingSoon('Prep and Set-up')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-            Prep and Set-up
-        </button>
+        <form method="POST" action="{{ route('staff.mark-prep-done') }}">
+            @csrf
+            <button type="submit" class="task-btn {{ $hasCompletedPrep ? 'is-done' : '' }}" style="width:100%" {{ $openShift ? '' : 'disabled title="Open your shift first"' }}>
+                @if ($hasCompletedPrep)
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                @else
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                @endif
+                Prep and Set-up
+            </button>
+        </form>
 
         <button type="button" class="task-btn is-danger" onclick="openCloseShiftModal()" {{ $hasVerifiedStock ? '' : 'disabled title="Verify Stock first"' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
@@ -265,14 +283,21 @@
     </div>
 
     <div class="action-row">
-        <button type="button" class="action-btn" onclick="comingSoon('Messages')">
+        <a href="{{ route('notices.index') }}" class="action-btn">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             Messages
-        </button>
-        <button type="button" class="action-btn" onclick="comingSoon('Clean')">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 3 18 18"/><path d="M13 5.5 9 9l-6 6 3.5 3.5L13 12l4-4"/></svg>
-            Clean
-        </button>
+        </a>
+        <form method="POST" action="{{ route('staff.mark-clean-done') }}">
+            @csrf
+            <button type="submit" class="action-btn {{ $hasCompletedClean ? 'is-done' : '' }}" style="width:100%" {{ $openShift ? '' : 'disabled title="Open your shift first"' }}>
+                @if ($hasCompletedClean)
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                @else
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 3 18 18"/><path d="M13 5.5 9 9l-6 6 3.5 3.5L13 12l4-4"/></svg>
+                @endif
+                Clean
+            </button>
+        </form>
         <form method="POST" action="{{ route('staff.clock-out') }}" onsubmit="return confirm('Clock out now? This will end your current shift.');">
             @csrf
             <button type="submit" class="action-btn action-btn--danger" style="width:100%">
@@ -322,17 +347,46 @@
     </div>
 </div>
 
-<script>
-    function comingSoon(label) {
-        alert(label + ' — coming soon.');
-    }
+{{-- VERIFY TILL AMOUNT MODAL --}}
+<div class="modal-overlay" id="verifyTillModal">
+    <div class="modal-box" style="width:340px;">
+        <div class="modal-box__head">
+            <h2>Verify Till Amount</h2>
+            <p>Count the starting cash in the drawer.</p>
+        </div>
+        <form method="POST" action="{{ route('staff.verify-till') }}">
+            @csrf
+            <div class="modal-box__body">
+                <div class="till-row">
+                    <label for="tillAmountInput">₱</label>
+                    <input type="number" step="0.01" min="0" name="till_amount" id="tillAmountInput" required
+                           value="{{ $hasVerifiedTill ? (float) $openShift->opening_till_amount : '' }}"
+                           placeholder="0.00">
+                </div>
+            </div>
+            <div class="modal-box__foot">
+                <button type="button" class="btn-cancel" onclick="closeVerifyTillModal()">Cancel</button>
+                <button type="submit" class="btn-confirm" style="background:var(--terra);border-color:var(--terra);">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
 
+<script>
     function openCloseShiftModal() {
         document.getElementById('closeShiftModal').classList.add('is-open');
     }
 
     function closeCloseShiftModal() {
         document.getElementById('closeShiftModal').classList.remove('is-open');
+    }
+
+    function openVerifyTillModal() {
+        document.getElementById('verifyTillModal').classList.add('is-open');
+    }
+
+    function closeVerifyTillModal() {
+        document.getElementById('verifyTillModal').classList.remove('is-open');
     }
 
     async function submitCloseShift(e) {
@@ -364,6 +418,10 @@
 
     document.getElementById('closeShiftModal').addEventListener('click', e => {
         if (e.target.id === 'closeShiftModal') closeCloseShiftModal();
+    });
+
+    document.getElementById('verifyTillModal').addEventListener('click', e => {
+        if (e.target.id === 'verifyTillModal') closeVerifyTillModal();
     });
 </script>
 
