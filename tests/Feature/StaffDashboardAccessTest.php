@@ -67,4 +67,26 @@ class StaffDashboardAccessTest extends TestCase
         $response->assertSee('Company Wide');
         $response->assertDontSee('For Branch B');
     }
+
+    public function test_staff_does_not_see_a_dashboard_link_on_pages_that_use_the_shared_sidebar(): void
+    {
+        $branch = Branch::factory()->create();
+        $staff = User::factory()->create(['role' => User::ROLE_STAFF, 'branch_id' => $branch->id]);
+
+        $response = $this->actingAs($staff)->get('/mail');
+
+        $response->assertOk();
+        $response->assertDontSee('Dashboard');
+    }
+
+    public function test_manager_still_sees_the_dashboard_link(): void
+    {
+        $branch = Branch::factory()->create();
+        $manager = User::factory()->manager()->create(['branch_id' => $branch->id]);
+
+        $response = $this->actingAs($manager)->get('/mail');
+
+        $response->assertOk();
+        $response->assertSee('Dashboard');
+    }
 }
