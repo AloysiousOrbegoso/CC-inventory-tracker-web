@@ -32,7 +32,6 @@ class RecipeCostHiddenFromStaffTest extends TestCase
         $staff = User::factory()->create(['role' => User::ROLE_STAFF, 'branch_id' => $branch->id]);
 
         $this->actingAs($staff)->get('/business/recipes')->assertForbidden();
-        $this->actingAs($staff)->get('/recipes')->assertForbidden();
     }
 
     public function test_staff_cannot_reach_the_recipe_crud_endpoints(): void

@@ -2,16 +2,30 @@
 
 @section('title', 'Supplier Directory')
 
+@section('styles')
+<style>
+    #supplierMiniMap { width: 100%; height: 180px; border-radius: 10px; border: 1.5px solid var(--border); }
+</style>
+@endsection
+
 @section('content')
 <div class="flex items-center justify-between mb-6">
     <div>
         <div class="text-[22px] font-extrabold tracking-tight">Supplier Directory</div>
         <div class="text-[13px] text-ink-2 mt-0.5">Manage ingredient suppliers, contacts, and purchase history</div>
     </div>
-    <button class="btn-primary flex items-center gap-1.5" onclick="openAddModal()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add Supplier
-    </button>
+    <div class="flex gap-2">
+        <a href="{{ route('suppliers.import') }}" class="btn-sm flex items-center gap-1.5">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Import CSV
+        </a>
+        @if(auth()->user()->isManager())
+        <button class="btn-primary flex items-center gap-1.5" onclick="openAddModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Supplier
+        </button>
+        @endif
+    </div>
 </div>
 
 <div class="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-3 mb-6">
@@ -31,9 +45,18 @@
 
 <div class="summary-table-wrap">
     @if ($suppliers->isEmpty())
-        <div class="empty-state-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-            <span class="empty-state-text">No suppliers added yet. Click "Add Supplier" to get started.</span>
+        <div class="empty-state-icon" style="padding:32px 20px">
+            <div style="font-size:32px;margin-bottom:8px">📦</div>
+            <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">No suppliers yet</div>
+            <div style="font-size:12px;color:var(--text-2);margin-bottom:12px">Add your ingredient suppliers to track pricing, purchases, and link them to your inventory.</div>
+            <div style="padding:10px 14px;background:var(--bg);border-radius:8px;text-align:left;font-size:11px;color:var(--text-2);max-width:260px;margin:0 auto">
+                <div style="font-weight:600;color:var(--text);margin-bottom:4px">🔗 Supplier features:</div>
+                <div style="margin-bottom:3px">• Link ingredients to suppliers</div>
+                <div style="margin-bottom:3px">• Track purchase history & pricing</div>
+                <div style="margin-bottom:3px">• Import suppliers from CSV/Excel</div>
+                <div>• Geocode supplier locations on map</div>
+            </div>
+            <button class="btn-primary" style="margin-top:14px" onclick="openCreateModal()">+ Add First Supplier</button>
         </div>
     @else
         <table class="summary-table">
@@ -64,7 +87,9 @@
                     <td>
                         <div class="flex gap-1.5">
                             <button class="btn-sm" onclick="viewSupplier({{ $supplier->id }})">View</button>
+                            @if(auth()->user()->isManager())
                             <button class="btn-sm" onclick="editSupplier({{ $supplier->id }}, {{ json_encode($supplier) }})">Edit</button>
+                            @endif
                             <button class="btn-sm danger" onclick="deleteSupplier({{ $supplier->id }}, '{{ $supplier->name }}')">Del</button>
                         </div>
                     </td>
@@ -85,6 +110,18 @@
             <div class="form-group"><div class="form-label">Contact Person</div><input type="text" class="form-input" id="fContactPerson" placeholder="e.g. Mang Juan"></div>
             <div class="form-group"><div class="form-label">Contact Number</div><input type="text" class="form-input" id="fContactNumber" placeholder="e.g. 0917-123-4567"></div>
             <div class="form-group"><div class="form-label">Address</div><textarea class="form-input" id="fAddress" placeholder="Full address..."></textarea></div>
+            <div class="form-group">
+                <div class="form-label">Auto-Geocode</div>
+                <div class="flex gap-2 items-end">
+                    <button type="button" class="btn-sm" onclick="geocodeSupplierAddress()" id="geocodeBtn">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-1px;margin-right:2px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                        Geocode
+                    </button>
+                    <span class="text-[11px] text-ink-3" id="geocodeStatus"></span>
+                </div>
+                <input type="hidden" id="fLatitude">
+                <input type="hidden" id="fLongitude">
+            </div>
             <div class="form-group"><div class="form-label">Nearest Landmark</div><input type="text" class="form-input" id="fLandmark" placeholder="e.g. Near BPI Marikina Market"></div>
             <div class="form-group"><div class="form-label">Notes</div><textarea class="form-input" id="fNotes" placeholder="Delivery schedule, minimum order, etc."></textarea></div>
             <div class="form-group"><div class="form-label">Photo <span class="opacity-50 font-normal">(storefront or contact, max 5MB)</span></div><input type="file" class="form-input" id="fPhoto" accept="image/*"></div>
@@ -108,6 +145,7 @@
         </div>
         <div class="mb-5"><div class="text-xs font-bold uppercase text-ink-3 mb-2">Contact Info</div><div class="text-[13px] leading-relaxed" id="detailContact">—</div></div>
         <div class="mb-5"><div class="text-xs font-bold uppercase text-ink-3 mb-2">Location</div><div class="text-[13px] leading-relaxed" id="detailLocation">—</div></div>
+        <div class="mb-5"><div class="text-xs font-bold uppercase text-ink-3 mb-2">Map</div><div id="supplierMiniMap"></div></div>
         <div class="mb-5"><div class="text-xs font-bold uppercase text-ink-3 mb-2">Linked Ingredients</div><div class="flex flex-col gap-1.5" id="detailIngredients"><div class="p-4 text-center text-[13px] text-ink-3">No linked ingredients yet.</div></div></div>
         <div class="mb-5"><div class="text-xs font-bold uppercase text-ink-3 mb-2">Recent Purchases</div><div id="detailPurchases"><div class="p-4 text-center text-[13px] text-ink-3">No purchase history recorded.</div></div></div>
         <hr class="border-line my-5">
@@ -152,6 +190,16 @@ function editSupplier(id, data) {
     document.getElementById('fAddress').value = data.address || '';
     document.getElementById('fLandmark').value = data.landmark || '';
     document.getElementById('fNotes').value = data.notes || '';
+    document.getElementById('fLatitude').value = data.latitude || '';
+    document.getElementById('fLongitude').value = data.longitude || '';
+    var geoStatus = document.getElementById('geocodeStatus');
+    if (data.latitude && data.longitude) {
+        geoStatus.textContent = 'Coords: ' + data.latitude + ', ' + data.longitude;
+        geoStatus.style.color = 'var(--green)';
+    } else {
+        geoStatus.textContent = 'No coordinates set';
+        geoStatus.style.color = '';
+    }
     document.getElementById('supplierModal').classList.add('is-open');
 }
 function closeModal() { document.getElementById('supplierModal').classList.remove('is-open'); }
@@ -169,6 +217,11 @@ async function saveSupplier(e) {
     fd.append('address', document.getElementById('fAddress').value);
     fd.append('landmark', document.getElementById('fLandmark').value);
     fd.append('notes', document.getElementById('fNotes').value);
+
+    var lat = document.getElementById('fLatitude').value;
+    var lng = document.getElementById('fLongitude').value;
+    if (lat) fd.append('latitude', lat);
+    if (lng) fd.append('longitude', lng);
 
     const photo = document.getElementById('fPhoto').files[0];
     if (photo) fd.append('photo', photo);
@@ -232,5 +285,121 @@ async function recordPurchase(e) {
     if (res.ok) viewSupplier(currentSupplierId); else alert('Error recording purchase.');
 }
 document.querySelectorAll('.modal-overlay').forEach(el => { el.addEventListener('click', e => { if (e.target === el) el.classList.remove('is-open'); }); });
+
+// ═══ Mini-Map (Google Maps) ═══
+var supplierMap = null;
+var supplierMapMarker = null;
+
+function renderSupplierMiniMap(lat, lng, name) {
+    var mapEl = document.getElementById('supplierMiniMap');
+    if (!lat || !lng) {
+        mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:180px;background:var(--bg);border-radius:10px;color:var(--text-3);font-size:12px;">No location data</div>';
+        return;
+    }
+
+    mapEl.innerHTML = '';
+    supplierMap = new google.maps.Map(mapEl, {
+        center: { lat: parseFloat(lat), lng: parseFloat(lng) },
+        zoom: 14,
+        disableDefaultUI: true,
+        gestureHandling: 'none'
+    });
+
+    supplierMapMarker = new google.maps.Marker({
+        position: { lat: parseFloat(lat), lng: parseFloat(lng) },
+        map: supplierMap,
+        icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 11,
+            fillColor: '#6366f1',
+            fillOpacity: 1,
+            strokeColor: '#fff',
+            strokeWeight: 2
+        },
+        label: { text: 'S', color: '#fff', fontSize: '10px', fontWeight: '800' }
+    });
+}
+
+// Patch viewSupplier to init mini-map
+var _origViewSupplier = viewSupplier;
+window.viewSupplier = async function(id) {
+    currentSupplierId = id;
+    var res = await fetch('/suppliers/' + id, { headers: { 'Accept': 'application/json' } });
+    if (!res.ok) return alert('Failed to load supplier.');
+    var s = await res.json();
+    document.getElementById('detailName').textContent = s.name;
+
+    var photo = document.getElementById('detailPhoto');
+    if (s.photo_path) {
+        photo.src = '/storage/' + s.photo_path;
+        photo.alt = s.name;
+        photo.classList.remove('hidden');
+    } else {
+        photo.classList.add('hidden');
+    }
+
+    function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    var peso = '\u20B1';
+    var times = '\u00D7';
+    document.getElementById('detailContact').innerHTML = '<strong>Person:</strong> ' + esc(s.contact_person||'—') + '<br><strong>Phone:</strong> ' + esc(s.contact_number||'—');
+    document.getElementById('detailLocation').innerHTML = esc(s.address||'—') + (s.landmark?'<br><strong>Landmark:</strong> ' + esc(s.landmark):'');
+    document.getElementById('detailIngredients').innerHTML = s.ingredients&&s.ingredients.length ? s.ingredients.map(function(i){ return '<div class="flex items-center justify-between p-2.5 px-3.5 bg-black/[.02] rounded-[10px] text-[13px]"><span class="font-semibold">' + esc(i.name) + ' (' + esc(i.unit) + ')</span><span class="flex items-center gap-2">' + (i.pivot.is_primary?'<span class="text-[10px] font-bold bg-[rgba(0,184,148,.1)] text-green px-2 py-0.5 rounded-full">PRIMARY</span>':'') + '<span class="font-bold text-accent">' + (i.pivot.unit_cost?peso+Number(i.pivot.unit_cost).toFixed(2):'—') + '</span></span></div>'; }).join('') : '<div class="p-4 text-center text-[13px] text-ink-3">No linked ingredients.</div>';
+    document.getElementById('detailPurchases').innerHTML = s.purchase_history&&s.purchase_history.length ? s.purchase_history.map(function(p){ return '<div class="flex items-center justify-between py-2 border-b border-line text-xs last:border-b-0"><span>' + new Date(p.purchased_at).toLocaleDateString('en-PH',{year:'numeric',month:'short',day:'numeric'}) + '</span><span>' + peso + Number(p.unit_price).toFixed(2) + ' ' + times + ' ' + p.quantity + '</span><span class="font-bold">' + peso + (p.unit_price*p.quantity).toFixed(2) + '</span></div>'; }).join('') : '<div class="p-4 text-center text-[13px] text-ink-3">No purchases recorded.</div>';
+
+    // Render mini-map
+    renderSupplierMiniMap(s.latitude, s.longitude, s.name);
+
+    document.getElementById('detailModal').classList.add('is-open');
+    updateUnitLabels();
+};
+
+async function geocodeSupplierAddress() {
+    var address = document.getElementById('fAddress').value;
+    var landmark = document.getElementById('fLandmark').value;
+    var btn = document.getElementById('geocodeBtn');
+    var status = document.getElementById('geocodeStatus');
+
+    var query = address || landmark || document.getElementById('fName').value;
+    if (!query) {
+        status.textContent = 'Enter an address first';
+        status.style.color = '#dc2626';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '...';
+    status.textContent = 'Geocoding...';
+    status.style.color = '';
+
+    try {
+        var res = await fetch('/api/geocode/address', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrf,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ address: query })
+        });
+        var data = await res.json();
+        if (data.success) {
+            document.getElementById('fLatitude').value = data.latitude;
+            document.getElementById('fLongitude').value = data.longitude;
+            status.textContent = data.latitude.toFixed(4) + ', ' + data.longitude.toFixed(4);
+            status.style.color = '#16a34a';
+        } else {
+            status.textContent = data.message || 'Could not geocode';
+            status.style.color = '#dc2626';
+        }
+    } catch (e) {
+        status.textContent = 'Network error';
+        status.style.color = '#dc2626';
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-1px;margin-right:2px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Geocode';
+    }
+}
 </script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.key', '') }}"></script>
 @endsection

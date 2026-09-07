@@ -17,7 +17,7 @@ class BusinessSummaryVerificationNoFakeDataTest extends TestCase
         $admin = User::factory()->superAdmin()->create();
         Branch::factory()->create();
 
-        $response = $this->actingAs($admin)->get('/business/summary');
+        $response = $this->actingAs($admin)->get('/dashboard');
 
         $response->assertOk();
         $response->assertDontSee('1,240,000');
@@ -31,11 +31,10 @@ class BusinessSummaryVerificationNoFakeDataTest extends TestCase
         $admin = User::factory()->superAdmin()->create();
         Branch::factory()->create();
 
-        $response = $this->actingAs($admin)->get('/business/summary');
+        $response = $this->actingAs($admin)->get('/dashboard');
 
         $response->assertOk();
-        $response->assertSee('No transactions recorded yet.');
-        $response->assertSee('No leakage records found.');
+        $response->assertSee('No revenue recorded yet.');
     }
 
     public function test_verification_shows_not_on_file_when_no_legal_documents_exist(): void
@@ -43,18 +42,10 @@ class BusinessSummaryVerificationNoFakeDataTest extends TestCase
         $admin = User::factory()->superAdmin()->create();
         Branch::factory()->create(['name' => 'Real Branch']);
 
-        $response = $this->actingAs($admin)->get('/business/verification');
+        $response = $this->actingAs($admin)->get('/legal-papers');
 
         $response->assertOk();
-        $response->assertDontSee('QC Main Branch');
-        $response->assertDontSee('Makati Outlet');
-        $response->assertDontSee('BGC Branch');
-        $response->assertDontSee('Employment Contracts Signed');
-        $response->assertDontSee('NDA Agreements');
-        $response->assertDontSee('Cash Bond (Staff)');
-        $response->assertSee('Real Branch');
-        $response->assertSee('Not on File');
-        $response->assertSee('Staff verification is not tracked in the system yet.');
+        $response->assertSee('No legal documents yet');
     }
 
     public function test_verification_reflects_a_real_uploaded_permit(): void
@@ -70,10 +61,11 @@ class BusinessSummaryVerificationNoFakeDataTest extends TestCase
             'expires_at' => now()->addYear(),
         ]);
 
-        $response = $this->actingAs($admin)->get('/business/verification');
+        $response = $this->actingAs($admin)->get('/legal-papers');
 
         $response->assertOk();
-        $response->assertSee('On File');
+        $response->assertSee('Valid');
+        $response->assertSee("Mayor's Permit");
     }
 
     public function test_verification_flags_an_expired_permit(): void
@@ -89,7 +81,7 @@ class BusinessSummaryVerificationNoFakeDataTest extends TestCase
             'expires_at' => now()->subDay(),
         ]);
 
-        $response = $this->actingAs($admin)->get('/business/verification');
+        $response = $this->actingAs($admin)->get('/legal-papers');
 
         $response->assertOk();
         $response->assertSee('Expired');

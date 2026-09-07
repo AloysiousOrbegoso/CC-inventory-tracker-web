@@ -63,7 +63,13 @@ class PaymentsController extends Controller
     public function store(Request $request): JsonResponse
     {
         $user = auth()->user();
-        $isManager = $user->isManager();
+
+        // Owner is an overseer — only managers record payments
+        if (! $user->isManager()) {
+            return response()->json(['message' => 'Forbidden. Managers record payments.'], 403);
+        }
+
+        $isManager = true;
 
         $validated = $request->validate([
             'branch_id' => [$isManager ? 'nullable' : 'required', 'exists:branches,id'],
@@ -93,7 +99,13 @@ class PaymentsController extends Controller
 
     public function update(Request $request, Payment $payment): JsonResponse
     {
-        $this->authorizeBranch($payment->branch_id);
+        $user = auth()->user();
+        if (! $user->isManager() && ! $user->isSuperAdmin()) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+        if (! $user->isSuperAdmin()) {
+            $this->authorizeBranch($payment->branch_id);
+        }
 
         $validated = $request->validate([
             'category' => ['required', 'in:'.implode(',', self::categories())],
@@ -118,7 +130,13 @@ class PaymentsController extends Controller
 
     public function markPaid(Payment $payment): JsonResponse
     {
-        $this->authorizeBranch($payment->branch_id);
+        $user = auth()->user();
+        if (! $user->isManager() && ! $user->isSuperAdmin()) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+        if (! $user->isSuperAdmin()) {
+            $this->authorizeBranch($payment->branch_id);
+        }
 
         $payment->update(['status' => 'paid', 'paid_at' => now()]);
 
@@ -127,7 +145,13 @@ class PaymentsController extends Controller
 
     public function destroy(Payment $payment): JsonResponse
     {
-        $this->authorizeBranch($payment->branch_id);
+        $user = auth()->user();
+        if (! $user->isManager() && ! $user->isSuperAdmin()) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+        if (! $user->isSuperAdmin()) {
+            $this->authorizeBranch($payment->branch_id);
+        }
 
         $payment->delete();
 

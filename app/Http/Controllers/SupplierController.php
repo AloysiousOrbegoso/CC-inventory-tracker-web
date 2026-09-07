@@ -25,6 +25,10 @@ class SupplierController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if (! $user->isManager()) {
+            return response()->json(['message' => 'Forbidden. Managers add suppliers.'], 403);
+        }
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'contact_person' => ['nullable', 'string', 'max:255'],
@@ -54,6 +58,10 @@ class SupplierController extends Controller
 
     public function update(Request $request, Supplier $supplier): JsonResponse
     {
+        $user = $request->user();
+        if (! $user->isManager()) {
+            return response()->json(['message' => 'Forbidden. Managers edit suppliers.'], 403);
+        }
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'contact_person' => ['nullable', 'string', 'max:255'],
@@ -79,8 +87,12 @@ class SupplierController extends Controller
         return response()->json(['success' => true, 'supplier' => $supplier]);
     }
 
-    public function destroy(Supplier $supplier): JsonResponse
+    public function destroy(Request $request, Supplier $supplier): JsonResponse
     {
+        $user = $request->user();
+        if (! $user->isManager() && ! $user->isSuperAdmin()) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
         if ($supplier->photo_path) {
             Storage::disk('public')->delete($supplier->photo_path);
         }

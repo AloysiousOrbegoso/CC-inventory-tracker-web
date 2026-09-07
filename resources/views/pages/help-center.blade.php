@@ -11,7 +11,7 @@
 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
     <div class="tile">
         <div class="tile__title">Managing workers</div>
-        <div class="text-[12.5px] text-ink-2 mt-2 leading-relaxed">Add, edit, and clock workers in and out from <a href="{{ route('business.workers') }}" class="text-accent no-underline hover:underline">Employees</a>. Set hourly rates and generate payslips from <a href="{{ route('salary.index') }}" class="text-accent no-underline hover:underline">Salary</a>.</div>
+        <div class="text-[12.5px] text-ink-2 mt-2 leading-relaxed">Add, edit, and clock workers in and out from <a href="{{ route('branches') }}" class="text-accent no-underline hover:underline">Employees</a>. Set hourly rates and generate payslips from <a href="{{ route('salary.index') }}" class="text-accent no-underline hover:underline">Salary</a>.</div>
     </div>
     <div class="tile">
         <div class="tile__title">Tracking discrepancies</div>

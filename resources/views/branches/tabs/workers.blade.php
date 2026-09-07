@@ -60,9 +60,18 @@
                 @empty
                     <tr>
                         <td colspan="6">
-                            <div class="empty-state-icon">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                                <span class="empty-state-text">No workers assigned to this branch yet.</span>
+                            <div class="empty-state-icon" style="padding:32px 20px">
+                                <div style="font-size:36px;margin-bottom:10px">👥</div>
+                                <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px">No workers yet</div>
+                                <div style="font-size:12px;color:var(--text-2);margin-bottom:16px">Assign workers to this branch to track attendance and manage shifts.</div>
+                                <div style="padding:12px;background:var(--bg);border-radius:8px;text-align:left;font-size:11px;color:var(--text-2);max-width:280px;margin:0 auto">
+                                    <div style="font-weight:600;color:var(--text);margin-bottom:6px">👤 Worker features:</div>
+                                    <div style="margin-bottom:3px">• Clock in / clock out tracking</div>
+                                    <div style="margin-bottom:3px">• Shift logs and attendance history</div>
+                                    <div style="margin-bottom:3px">• Pay rate management and payslips</div>
+                                    <div>• Peer reviews and goal tracking</div>
+                                </div>
+                                <a href="{{ url('/business/workers') }}" class="btn-pill" style="margin-top:14px;display:inline-block;text-decoration:none">+ Add Workers</a>
                             </div>
                         </td>
                     </tr>

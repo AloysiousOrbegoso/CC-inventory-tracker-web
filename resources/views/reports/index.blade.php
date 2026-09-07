@@ -171,9 +171,10 @@
     </div>
     <div class="card__body">
         @if($recentFlags->isEmpty())
-            <div class="empty-state-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-                <span class="empty-state-text">None as of yet.</span>
+            <div class="empty-state-icon" style="padding:24px 16px">
+                <div style="font-size:24px;margin-bottom:6px">✅</div>
+                <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px">No recent flags</div>
+                <div style="font-size:11px;color:var(--text-2)">All stock levels are within normal range.</div>
             </div>
         @else
             <ul class="flag-list">
@@ -211,9 +212,10 @@
     </div>
     <div class="card__body">
         @if($previousFlags->isEmpty())
-            <div class="empty-state-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-                <span class="empty-state-text">No previous flags.</span>
+            <div class="empty-state-icon" style="padding:24px 16px">
+                <div style="font-size:24px;margin-bottom:6px">📋</div>
+                <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px">No history yet</div>
+                <div style="font-size:11px;color:var(--text-2)">Resolved or older flags will appear here.</div>
             </div>
         @else
             <ul class="flag-list">

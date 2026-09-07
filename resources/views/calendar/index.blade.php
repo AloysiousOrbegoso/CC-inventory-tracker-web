@@ -57,26 +57,48 @@
                                 <div class="text-[14px] font-bold text-[#1C1917] mb-1">{{ $meeting->title }}</div>
                                 <div class="text-[12px] text-[#1C1917] opacity-60">{{ $meeting->start_time }} - {{ $meeting->end_time }}</div>
                                 <div class="text-[12px] text-[#1C1917] opacity-50">{{ $meeting->location ?? 'Online' }}</div>
+                                @if(auth()->user()->isSuperAdmin())
                                 <button onclick="deleteMeeting({{ $meeting->id }})" class="mt-2 text-[11px] text-red-600 bg-transparent border-none cursor-pointer hover:underline">Delete</button>
+                            @endif
                             </div>
                         @endforeach
                     @else
-                        <div class="text-center py-6 text-[13px] text-[#1C1917] opacity-40">Nothing scheduled yet.</div>
+                        <div class="text-center py-8">
+                            <div class="text-[32px] mb-3">📅</div>
+                            <div class="text-[14px] font-bold text-[#1C1917] mb-1">No meetings this week</div>
+                            <div class="text-[12px] text-[#1C1917] opacity-40 mb-4">Schedule a meeting to get started with your team.</div>
+                            <div style="padding:12px;background:#FDF5D6;border-radius:8px;text-align:left;font-size:11px;color:#5C2D1B">
+                                <div style="font-weight:700;margin-bottom:4px">💡 Quick tips:</div>
+                                <div>• Use meetings for team syncs and standups</div>
+                                <div>• Tasks help track individual responsibilities</div>
+                                <div>• Events are great for deadlines and milestones</div>
+                            </div>
+                        </div>
                     @endif
+                    @if(auth()->user()->isManager())
                     <button class="flex items-center gap-2 px-4 py-2.5 bg-[rgba(180,83,83,.08)] text-[#B45353] border border-[#B45353] rounded-lg text-[13px] font-semibold cursor-pointer transition-all hover:bg-[#B45353] hover:text-white mt-2.5" onclick="openModal()">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                         Schedule a Meeting
                     </button>
+                    @endif
                 </div>
 
                 {{-- Tasks Content --}}
                 <div id="tasksContent" class="hidden">
-                    <div class="text-center py-6 text-[13px] text-[#1C1917] opacity-40">No tasks for this day.</div>
+                    <div class="text-center py-8">
+                        <div class="text-[32px] mb-3">✅</div>
+                        <div class="text-[14px] font-bold text-[#1C1917] mb-1">No tasks yet</div>
+                        <div class="text-[12px] text-[#1C1917] opacity-40">Create tasks to assign action items to your team.</div>
+                    </div>
                 </div>
 
                 {{-- Events Content --}}
                 <div id="eventsContent" class="hidden">
-                    <div class="text-center py-6 text-[13px] text-[#1C1917] opacity-40">No events scheduled.</div>
+                    <div class="text-center py-8">
+                        <div class="text-[32px] mb-3">🎉</div>
+                        <div class="text-[14px] font-bold text-[#1C1917] mb-1">No events yet</div>
+                        <div class="text-[12px] text-[#1C1917] opacity-40">Add events for deadlines, holidays, or special occasions.</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -147,7 +169,11 @@
                             </div>
                         @endforeach
                     @else
-                        <div class="text-center py-4 text-[13px] text-[#1C1917] opacity-40">No meetings this month.</div>
+                        <div class="text-center py-6">
+                            <div class="text-[24px] mb-2">📋</div>
+                            <div class="text-[12px] font-semibold text-[#1C1917] mb-1">No meetings this month</div>
+                            <div class="text-[11px] text-[#1C1917] opacity-40">Use the week panel to schedule one.</div>
+                        </div>
                     @endif
                 </div>
 
@@ -162,13 +188,21 @@
                             </div>
                         @endforeach
                     @else
-                        <div class="text-center py-4 text-[13px] text-[#1C1917] opacity-40">No tasks this month.</div>
+                        <div class="text-center py-6">
+                            <div class="text-[24px] mb-2">✅</div>
+                            <div class="text-[12px] font-semibold text-[#1C1917] mb-1">No tasks this month</div>
+                            <div class="text-[11px] text-[#1C1917] opacity-40">Create tasks to track team responsibilities.</div>
+                        </div>
                     @endif
                 </div>
 
                 {{-- Monthly Events Content --}}
                 <div id="monthlyEventsContent" class="hidden">
-                    <div class="text-center py-4 text-[13px] text-[#1C1917] opacity-40">No events for this month.</div>
+                    <div class="text-center py-6">
+                        <div class="text-[24px] mb-2">🎉</div>
+                        <div class="text-[12px] font-semibold text-[#1C1917] mb-1">No events this month</div>
+                        <div class="text-[11px] text-[#1C1917] opacity-40">Add events for special occasions or deadlines.</div>
+                    </div>
                 </div>
             </div>
 
@@ -187,7 +221,11 @@
                         </div>
                     @endforeach
                 @else
-                    <div class="text-center py-4 text-[13px] text-[#1C1917] opacity-40">No upcoming meetings.</div>
+                    <div class="text-center py-6">
+                        <div class="text-[24px] mb-2">📆</div>
+                        <div class="text-[12px] font-semibold text-[#1C1917] mb-1">All clear</div>
+                        <div class="text-[11px] text-[#1C1917] opacity-40">No upcoming meetings scheduled.</div>
+                    </div>
                 @endif
             </div>
         </div>
@@ -446,7 +484,9 @@
             <div class="text-[14px] font-bold text-[#1C1917] mb-1">${data.title}</div>
             <div class="text-[12px] text-[#1C1917] opacity-60">${data.start_time} - ${data.end_time}</div>
             <div class="text-[12px] text-[#1C1917] opacity-50">${data.location || 'Online'}</div>
+            @if(auth()->user()->isSuperAdmin())
             <button onclick="deleteMeeting(${data.id})" class="mt-2 text-[11px] text-red-600 bg-transparent border-none cursor-pointer hover:underline">Delete</button>
+            @endif
         `;
         
         meetingsContent.insertBefore(meetingCard, meetingsContent.querySelector('button'));

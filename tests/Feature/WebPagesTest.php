@@ -97,8 +97,12 @@ class WebPagesTest extends TestCase
 
     public function test_recipes_page_loads(): void
     {
-        $response = $this->actingAs($this->owner)->get('/recipes');
+        $branch = Branch::factory()->create();
+        $this->owner->branch_id = $branch->id;
+        $this->owner->save();
+        $response = $this->actingAs($this->owner)->get('/business/recipes');
         $response->assertStatus(200);
+        $response->assertViewIs('business.recipes');
     }
 
     public function test_inventory_page_loads(): void
@@ -208,7 +212,7 @@ class WebPagesTest extends TestCase
 
     public function test_business_workers_page_loads(): void
     {
-        $response = $this->actingAs($this->owner)->get('/business/workers');
+        $response = $this->actingAs($this->owner)->get('/branches/'.$this->branch->id.'?tab=workers');
         $response->assertStatus(200);
         $response->assertSee($this->manager->name);
         $response->assertSee($this->staff->name);
@@ -229,7 +233,7 @@ class WebPagesTest extends TestCase
 
     public function test_verification_page_loads(): void
     {
-        $response = $this->actingAs($this->owner)->get('/business/verification');
+        $response = $this->actingAs($this->owner)->get('/legal-papers');
         $response->assertStatus(200);
     }
 
@@ -280,6 +284,7 @@ class WebPagesTest extends TestCase
         $response = $this->actingAs($this->manager)->get('/business/workers');
         $response->assertStatus(200);
         $response->assertSee($this->staff->name);
+        $response->assertDontSee('Other Branch');
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -288,6 +293,7 @@ class WebPagesTest extends TestCase
 
     public function test_staff_cannot_access_workers_page(): void
     {
+        // Staff can't access the workers directory at all — route requires manager/owner role
         $response = $this->actingAs($this->staff)->get('/business/workers');
         $response->assertStatus(403);
     }
@@ -299,7 +305,7 @@ class WebPagesTest extends TestCase
     public function test_pages_redirect_when_unauthenticated(): void
     {
         $this->get('/dashboard')->assertStatus(302);
-        $this->get('/recipes')->assertStatus(302);
+        $this->get('/business/recipes')->assertStatus(302);
         $this->get('/inventory')->assertStatus(302);
         $this->get('/branches')->assertStatus(302);
         $this->get('/alerts')->assertStatus(302);
@@ -311,7 +317,7 @@ class WebPagesTest extends TestCase
         $this->get('/about')->assertStatus(302);
         $this->get('/business/workers')->assertStatus(302);
         $this->get('/logistics')->assertStatus(302);
-        $this->get('/business/verification')->assertStatus(302);
+        $this->get('/legal-papers')->assertStatus(302);
         $this->get('/settings')->assertStatus(302);
     }
 

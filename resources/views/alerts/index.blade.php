@@ -66,7 +66,11 @@
 
     @if ($alerts->isEmpty())
         <div class="card-panel">
-            <div class="all-clear">No alerts &mdash; all clear &#10003;</div>
+            <div class="all-clear" style="padding:24px">
+                <div style="font-size:28px;margin-bottom:8px">✅</div>
+                <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">All clear!</div>
+                <div style="font-size:12px;color:var(--text-2)">No discrepancy alerts. All stock levels are normal.</div>
+            </div>
         </div>
     @else
         <div class="card-panel">

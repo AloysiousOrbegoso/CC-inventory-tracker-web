@@ -5,12 +5,23 @@ use App\Http\Controllers\AuthOnboardingController;
 use App\Http\Controllers\BranchesController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HiringController;
-use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\LegalPapersController;
 use App\Http\Controllers\NoticesController;
 use App\Http\Controllers\PaymentsController;
 use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\ProfitLossController;
+use App\Http\Controllers\InventoryIntelligenceController;
+use App\Http\Controllers\PurchaseOrderController;
+use App\Http\Controllers\LeaveRequestController;
+use App\Http\Controllers\AuditTrailController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\ForecastingController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\EquipmentController;
+use App\Http\Controllers\CustomReportController;
+use App\Http\Controllers\SafetyChecklistController;
+use App\Http\Controllers\BenchmarkingController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -296,75 +307,25 @@ Route::middleware('auth')->group(function () {
     // Recipes expose cost/margin data and edit controls -- owner/manager
     // only, same reasoning as /dashboard: staff have no equivalent page to
     // redirect to here, so the sidebar link is hidden for them instead.
-    Route::get('/recipes', \App\Http\Controllers\BusinessRecipesController::class)
-        ->name('recipes')
-        ->middleware('role:super_admin,manager');
-    Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory');
     Route::get('/branches', [BranchesController::class, 'index'])->name('branches');
     Route::post('/branches', [BranchesController::class, 'store'])->name('branches.store');
     Route::get('/branches/{branch}', [BranchesController::class, 'show'])->whereNumber('branch')->name('branches.show');
     Route::put('/branches/{branch}/description', [BranchesController::class, 'updateDescription'])->whereNumber('branch')->name('branches.description.update');
     Route::put('/branches/{branch}/disown', [BranchesController::class, 'disown'])->whereNumber('branch')->name('branches.disown');
     Route::get('/alerts', [AlertsController::class, 'index'])->name('alerts');
+    Route::get('/map', [\App\Http\Controllers\MapController::class, 'index'])->name('map');
 
     // ── Notification inbox (bell dropdown) ───────────────────────────
     Route::get('/notifications', [\App\Http\Controllers\NotificationsController::class, 'index'])->name('notifications.index');
     Route::put('/notifications/{notification}/read', [\App\Http\Controllers\NotificationsController::class, 'markRead'])->name('notifications.read');
     Route::put('/notifications/read-all', [\App\Http\Controllers\NotificationsController::class, 'markAllRead'])->name('notifications.read-all');
 
-    // ── Business Pages (static structural placeholders) ───────────────
-    Route::get('/business/recipes', \App\Http\Controllers\BusinessRecipesController::class)
-        ->name('business.recipes')
-        ->middleware('role:super_admin,manager');
 
-    Route::get('/business/summary', \App\Http\Controllers\BusinessSummaryController::class)
-        ->name('business.summary');
-
-    // ── Workers Page (Staff & Manager listing) ──────────────────────────
-    Route::get('/business/workers', function () {
-        $user = auth()->user();
-
-        // Authorization: staff cannot access the workers management page.
-        if (! $user->isSuperAdmin() && ! $user->isManager()) {
-            abort(403, 'You do not have permission to manage workers.');
-        }
-
-        $isManager = $user->isManager();
-
-        $workers = \App\Models\User::whereIn('role', $isManager
-                ? [\App\Models\User::ROLE_STAFF]           // managers see only staff
-                : [\App\Models\User::ROLE_STAFF, \App\Models\User::ROLE_MANAGER]  // super_admins see all
-            )
-            ->with('branch', 'profile', 'peerReviews.reviewer', 'goals')
-            ->when($isManager, fn ($q) => $q->where('branch_id', $user->branch_id))
-            ->orderBy('name')
-            ->get();
-
-        // Dedicated query to find workers with an open shift (avoids loading all shift logs)
-        $openShiftUserIds = \App\Models\ShiftLog::where('status', 'open')
-            ->whereIn('user_id', $workers->pluck('id'))
-            ->pluck('user_id')
-            ->unique()
-            ->toArray();
-
-        $openPositions = \App\Models\JobOpening::where('status', 'open')
-            ->when($isManager, fn ($q) => $q->where('branch_id', $user->branch_id))
-            ->with('branch')
-            ->withCount('applicants')
-            ->latest()
-            ->take(5)
-            ->get();
-
-        return view('business.workers', [
-            'branches'          => \App\Models\Branch::when($isManager, fn ($q) => $q->where('id', $user->branch_id))->orderBy('name')->get(),
-            'workers'           => $workers,
-            'openShiftUserIds'  => $openShiftUserIds,
-            'openPositions'     => $openPositions,
-        ]);
-    })->name('business.workers');
 
     // ── Recipe CRUD (AJAX endpoints — session auth) ────────────────────
     Route::middleware('role:super_admin,manager')->group(function () {
+        Route::get('/business/recipes', [\App\Http\Controllers\BusinessRecipesController::class, '__invoke'])
+            ->name('business.recipes');
         Route::get('/business/recipes/product/{product}/data', [\App\Http\Controllers\BusinessRecipesController::class, 'getProductData'])
             ->name('business.recipes.product.data');
         Route::get('/business/recipes/product/{product}/profile', [\App\Http\Controllers\BusinessRecipesController::class, 'ingredientProfile'])
@@ -379,6 +340,12 @@ Route::middleware('auth')->group(function () {
             ->name('business.recipes.ingredient.remove');
         Route::post('/business/recipes/product/{product}/delete', [\App\Http\Controllers\BusinessRecipesController::class, 'destroyProduct'])
             ->name('business.recipes.product.delete');
+    });
+
+    // ── Workers Directory (GET — owner/manager) ─────────────────────
+    Route::middleware('role:super_admin,manager')->group(function () {
+        Route::get('/business/workers', [\App\Http\Controllers\WorkersController::class, 'index'])
+            ->name('business.workers');
     });
 
     // ── Workers CRUD (AJAX endpoints) ───────────────────────────────────
@@ -502,9 +469,7 @@ Route::middleware('auth')->group(function () {
         ]);
     })->name('logistics');
 
-    // ── Verification page (sub-tab in business/* views) ──────────────
-    Route::get('/business/verification', \App\Http\Controllers\VerificationController::class)
-        ->name('business.verification');
+
 
     // ── API Documentation (protected — requires auth) ─────────────────
     Route::get('/api-docs', function () {
@@ -522,11 +487,78 @@ Route::middleware('auth')->group(function () {
     Route::post('/settings/payment-categories', [SettingsController::class, 'addPaymentCategory'])->name('settings.payment-categories.store');
     Route::delete('/settings/payment-categories/{category}', [SettingsController::class, 'removePaymentCategory'])->name('settings.payment-categories.destroy');
 
+    // ── Profit & Loss ──────────────────────────────────────────────
+    Route::get('/profit-loss', [ProfitLossController::class, 'index'])->name('profit-loss');
+
+    // ── Inventory Intelligence ──────────────────────────────────────
+    Route::get('/inventory', [InventoryIntelligenceController::class, 'index'])->name('inventory.intelligence');
+
+    // ── Purchase Orders ─────────────────────────────────────────────
+    Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
+    Route::post('/purchase-orders', [PurchaseOrderController::class, 'store'])->name('purchase-orders.store');
+    Route::get('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show'])->name('purchase-orders.show');
+    Route::patch('/purchase-orders/{purchaseOrder}/status', [PurchaseOrderController::class, 'updateStatus'])->name('purchase-orders.update-status');
+    Route::delete('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'destroy'])->name('purchase-orders.destroy');
+
+    // ── Leave Requests ─────────────────────────────────────────────
+    Route::get('/leave', [LeaveRequestController::class, 'index'])->name('leave.index');
+    Route::post('/leave', [LeaveRequestController::class, 'store'])->name('leave.store');
+    Route::patch('/leave/{leaveRequest}/status', [LeaveRequestController::class, 'updateStatus'])->name('leave.update-status');
+    Route::delete('/leave/{leaveRequest}', [LeaveRequestController::class, 'destroy'])->name('leave.destroy');
+
+    // ── Audit Trail ────────────────────────────────────────────────
+    Route::get('/audit', [AuditTrailController::class, 'index'])->name('audit.index');
+    Route::get('/audit/{auditLog}', [AuditTrailController::class, 'show'])->name('audit.show');
+
+    // ── Invoices ───────────────────────────────────────────────────
+    Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+    Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
+    Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+    Route::patch('/invoices/{invoice}/status', [InvoiceController::class, 'updateStatus'])->name('invoices.update-status');
+    Route::delete('/invoices/{invoice}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
+
+    // ── Forecasting ────────────────────────────────────────────────
+    Route::get('/forecasting', [ForecastingController::class, 'index'])->name('forecasting');
+
+    // ── Customers ──────────────────────────────────────────────────
+    Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
+    Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
+    Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
+    Route::post('/customers/{customer}/feedback', [CustomerController::class, 'storeFeedback'])->name('customers.feedback.store');
+    Route::post('/customers/{customer}/points', [CustomerController::class, 'addPoints'])->name('customers.add-points');
+
+    // ── Equipment Maintenance ──────────────────────────────────────
+    Route::get('/equipment', [EquipmentController::class, 'index'])->name('equipment.index');
+    Route::post('/equipment', [EquipmentController::class, 'store'])->name('equipment.store');
+    Route::put('/equipment/{equipment}', [EquipmentController::class, 'update'])->name('equipment.update');
+    Route::delete('/equipment/{equipment}', [EquipmentController::class, 'destroy'])->name('equipment.destroy');
+
+    // ── Custom Reports ─────────────────────────────────────────────
+    Route::get('/reports/custom', [CustomReportController::class, 'index'])->name('reports.custom');
+    Route::post('/reports/custom/generate', [CustomReportController::class, 'generate'])->name('reports.custom.generate');
+
+    // ── Health & Safety Checklists ─────────────────────────────────
+    Route::get('/safety', [SafetyChecklistController::class, 'index'])->name('safety.index');
+    Route::get('/safety/create', [SafetyChecklistController::class, 'create'])->name('safety.create');
+    Route::post('/safety', [SafetyChecklistController::class, 'store'])->name('safety.store');
+    Route::get('/safety/{checklist}', [SafetyChecklistController::class, 'show'])->name('safety.show');
+
+    // ── Benchmarking ───────────────────────────────────────────────
+    Route::get('/benchmarking', [BenchmarkingController::class, 'index'])->name('benchmarking');
+
     // ── Pricing Simulator ─────────────────────────────────────────────
     Route::get('/pricing', [\App\Http\Controllers\PricingController::class, 'index'])
         ->name('pricing.index');
     Route::get('/pricing/simulate', [\App\Http\Controllers\PricingController::class, 'simulate'])
         ->name('pricing.simulate');
+    Route::middleware('role:super_admin,manager')->group(function () {
+        Route::get('/pricing/ingredients', [\App\Http\Controllers\IngredientPricingController::class, 'index'])
+            ->name('pricing.ingredients');
+        Route::get('/pricing/ingredients/{ingredient}/data', [\App\Http\Controllers\IngredientPricingController::class, 'getPricingData'])
+            ->name('pricing.ingredients.data');
+        Route::post('/pricing/ingredients/{ingredient}/pricing', [\App\Http\Controllers\IngredientPricingController::class, 'updatePricing'])
+            ->name('pricing.ingredients.update');
+    });
 
     // ── Supplier Directory (owner/manager only — pricing data) ─────────
     Route::middleware('role:super_admin,manager')->group(function () {
@@ -546,6 +578,20 @@ Route::middleware('auth')->group(function () {
             ->name('suppliers.unlink-ingredient');
         Route::post('/suppliers/{supplier}/purchases', [\App\Http\Controllers\SupplierController::class, 'addPurchase'])
             ->name('suppliers.add-purchase');
+        Route::get('/suppliers/import', [\App\Http\Controllers\SupplierImportController::class, 'index'])
+            ->name('suppliers.import');
+        Route::post('/suppliers/import/preview', [\App\Http\Controllers\SupplierImportController::class, 'preview'])
+            ->name('suppliers.import.preview');
+        Route::post('/suppliers/import/execute', [\App\Http\Controllers\SupplierImportController::class, 'execute'])
+            ->name('suppliers.import.execute');
+
+        // ── Geocoding API (owner/manager — modifies branch/supplier data)
+        Route::post('/api/geocode/address', [\App\Http\Controllers\GeocodingController::class, 'geocodeAddress'])
+            ->name('api.geocode.address');
+        Route::post('/api/geocode/branches', [\App\Http\Controllers\GeocodingController::class, 'geocodeBranches'])
+            ->name('api.geocode.branches');
+        Route::post('/api/geocode/suppliers', [\App\Http\Controllers\GeocodingController::class, 'geocodeSuppliers'])
+            ->name('api.geocode.suppliers');
     });
 
     // ── AJAX Branch Data Endpoints (main design — kept as-is) ───────────

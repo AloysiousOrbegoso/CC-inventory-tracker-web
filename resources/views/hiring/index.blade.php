@@ -17,10 +17,12 @@
         <div class="text-[22px] font-extrabold tracking-tight">Hiring</div>
         <div class="text-[13px] text-ink-2 mt-0.5">Job openings and applicant pipeline</div>
     </div>
+    @if(auth()->user()->isManager())
     <button type="button" class="btn-primary" onclick="openOpeningModal()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         New Opening
     </button>
+    @endif
 </div>
 
 <div class="grid grid-cols-4 max-[880px]:grid-cols-2 card border-[1.5px] border-line overflow-hidden divide-x divide-line max-[880px]:divide-x-0 mb-5">
@@ -51,9 +53,18 @@
 {{-- OPENINGS --}}
 <div id="panelOpenings" class="summary-table-wrap">
     @if ($openings->isEmpty())
-        <div class="empty-state-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-            <span class="empty-state-text">No job openings yet. Click "New Opening" to post one.</span>
+        <div class="empty-state-icon" style="padding:32px 20px">
+            <div style="font-size:36px;margin-bottom:10px">💼</div>
+            <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px">No job openings yet</div>
+            <div style="font-size:12px;color:var(--text-2);margin-bottom:16px">Post your first opening to start collecting applicants.</div>
+            <div style="padding:12px;background:var(--bg);border-radius:8px;text-align:left;font-size:11px;color:var(--text-2);max-width:300px;margin:0 auto">
+                <div style="font-weight:600;color:var(--text);margin-bottom:6px">🚀 Hiring pipeline:</div>
+                <div style="margin-bottom:3px">• Post openings for specific branches</div>
+                <div style="margin-bottom:3px">• Collect applicant resumes and info</div>
+                <div style="margin-bottom:3px">• Track candidates through stages</div>
+                <div>• Shortlist, interview, and hire — all in one place</div>
+            </div>
+            <button class="btn-primary" style="margin-top:14px" onclick="openOpeningModal()">+ Post First Opening</button>
         </div>
     @else
         <table class="summary-table">
@@ -67,9 +78,13 @@
                     <td><span class="font-bold text-accent">{{ $opening->applicants->count() }}</span></td>
                     <td>
                         <div class="flex gap-1.5">
+                            @if(auth()->user()->isManager())
                             <button class="btn-sm" onclick="openApplicantModal({{ $opening->id }}, '{{ addslashes($opening->title) }}')">Add Applicant</button>
+                            @if(auth()->user()->isSuperAdmin())
                             <button class="btn-sm" onclick='openEditOpeningModal(@json($opening))'>Edit</button>
                             <button class="btn-sm danger" onclick="deleteOpening({{ $opening->id }}, '{{ addslashes($opening->title) }}')">Del</button>
+                            @endif
+                            @endif
                         </div>
                     </td>
                 </tr>
@@ -92,9 +107,10 @@
     @endif
     <div class="summary-table-wrap">
     @if ($applicants->isEmpty())
-        <div class="empty-state-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
-            <span class="empty-state-text">No applicants yet.</span>
+        <div class="empty-state-icon" style="padding:32px 20px">
+            <div style="font-size:36px;margin-bottom:10px">📋</div>
+            <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px">No applicants yet</div>
+            <div style="font-size:12px;color:var(--text-2)">Applicants will appear here once people apply to your openings.</div>
         </div>
     @else
         <table class="summary-table">
@@ -119,7 +135,7 @@
                             <span class="text-ink-3 text-xs">—</span>
                         @endif
                     </td>
-                    <td><button class="btn-sm danger" onclick="deleteApplicant({{ $applicant->id }}, '{{ addslashes($applicant->name) }}')">Del</button></td>
+                    <td>@if(auth()->user()->isManager())<button class="btn-sm danger" onclick="deleteApplicant({{ $applicant->id }}, '{{ addslashes($applicant->name) }}')">Del</button>@endif</td>
                 </tr>
                 @endforeach
             </tbody>
@@ -131,9 +147,19 @@
 {{-- PIPELINE (KANBAN) --}}
 <div id="panelPipeline" class="hidden">
     @if ($applicants->isEmpty())
-        <div class="empty-state-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
-            <span class="empty-state-text">No applicants yet.</span>
+        <div class="empty-state-icon" style="padding:32px 20px">
+            <div style="font-size:36px;margin-bottom:10px">🔀</div>
+            <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px">Pipeline is empty</div>
+            <div style="font-size:12px;color:var(--text-2);margin-bottom:12px">Once applicants start coming in, track them through each stage.</div>
+            <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;font-size:10px;font-weight:600">
+                <span style="padding:6px 12px;background:var(--bg);border-radius:6px;color:var(--text-2)">Applied</span>
+                <span style="color:var(--text-3)">→</span>
+                <span style="padding:6px 12px;background:var(--bg);border-radius:6px;color:var(--text-2)">Shortlisted</span>
+                <span style="color:var(--text-3)">→</span>
+                <span style="padding:6px 12px;background:var(--bg);border-radius:6px;color:var(--text-2)">Interviewed</span>
+                <span style="color:var(--text-3)">→</span>
+                <span style="padding:6px 12px;background:#dcfce7;border-radius:6px;color:#15803d">Hired</span>
+            </div>
         </div>
     @else
         <div class="grid grid-cols-5 max-[1100px]:grid-cols-1 gap-3">

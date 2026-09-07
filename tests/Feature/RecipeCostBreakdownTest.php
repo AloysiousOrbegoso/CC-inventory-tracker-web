@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Branch;
 use App\Models\Ingredient;
 use App\Models\Product;
 use App\Models\Recipe;
@@ -17,6 +18,9 @@ class RecipeCostBreakdownTest extends TestCase
     public function test_recipes_index_shows_real_inline_cost_and_margin_per_size(): void
     {
         $admin = User::factory()->superAdmin()->create();
+        $branch = Branch::factory()->create();
+        $admin->branch_id = $branch->id;
+        $admin->save();
 
         $product = Product::create(['name' => 'Milk Tea', 'category' => 'Drinks', 'price' => 100, 'price_large' => 150, 'is_active' => true]);
         $ingredient = Ingredient::create(['name' => 'Milk Powder', 'unit' => 'g']);

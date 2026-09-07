@@ -29,9 +29,8 @@ class IngredientController extends Controller
     public function store(Request $request): JsonResponse
     {
         $user = Auth::user();
-
-        if (! $user->isSuperAdmin() && ! $user->isManager()) {
-            return response()->json(['message' => 'Forbidden.'], 403);
+        if (! $user->isManager()) {
+            return response()->json(['message' => 'Forbidden. Managers add ingredients.'], 403);
         }
 
         $validated = $request->validate([
@@ -53,9 +52,8 @@ class IngredientController extends Controller
     public function update(Request $request, Ingredient $ingredient): JsonResponse
     {
         $user = Auth::user();
-
-        if (! $user->isSuperAdmin() && ! $user->isManager()) {
-            return response()->json(['message' => 'Forbidden.'], 403);
+        if (! $user->isManager()) {
+            return response()->json(['message' => 'Forbidden. Managers edit ingredients.'], 403);
         }
 
         $validated = $request->validate([
@@ -78,8 +76,8 @@ class IngredientController extends Controller
     {
         $user = Auth::user();
 
-        if (! $user->isSuperAdmin()) {
-            return response()->json(['message' => 'Only the account owner can delete ingredients.'], 403);
+        if (! $user->isManager()) {
+            return response()->json(['message' => 'Forbidden. Managers delete ingredients.'], 403);
         }
 
         // Check if this ingredient is used in any recipes

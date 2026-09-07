@@ -11,10 +11,12 @@
         <div class="text-[22px] font-extrabold tracking-tight">Receipts</div>
         <div class="text-[13px] text-ink-2 mt-0.5">Scan a receipt photo — OCR reads the total and matches it against POS transactions</div>
     </div>
+    @if(auth()->user()->isManager())
     <button type="button" class="btn-primary" onclick="openScanModal()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Scan Receipt
     </button>
+    @endif
 </div>
 
 <div class="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-3 mb-6">
@@ -42,9 +44,18 @@
 
 <div class="summary-table-wrap">
     @if ($receipts->isEmpty())
-        <div class="empty-state-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="11" x2="15" y2="11"/></svg>
-            <span class="empty-state-text">No receipts scanned yet.</span>
+        <div class="empty-state-icon" style="padding:32px 20px">
+            <div style="font-size:32px;margin-bottom:8px">🧾</div>
+            <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">No receipts scanned yet</div>
+            <div style="font-size:12px;color:var(--text-2);margin-bottom:12px">Scan receipt photos and OCR will match them against POS transactions.</div>
+            <div style="padding:10px 14px;background:var(--bg);border-radius:8px;text-align:left;font-size:11px;color:var(--text-2);max-width:280px;margin:0 auto">
+                <div style="font-weight:600;color:var(--text);margin-bottom:4px">📸 How it works:</div>
+                <div style="margin-bottom:3px">• Upload a photo of a receipt</div>
+                <div style="margin-bottom:3px">• OCR reads the total amount</div>
+                <div style="margin-bottom:3px">• System matches it to a transaction</div>
+                <div>• Discrepancies are flagged for review</div>
+            </div>
+            <button class="btn-primary" style="margin-top:14px" onclick="openScanModal()">+ Scan First Receipt</button>
         </div>
     @else
         <table class="summary-table">

@@ -47,12 +47,12 @@ class DatabaseSeeder extends Seeder
         // ── 6 Operating Branches ───────────────────────────────────────
 
         $branches = collect([
-            ['name' => 'Branch QC', 'location' => 'Quezon City, Metro Manila', 'status' => 'active'],
-            ['name' => 'Branch Makati', 'location' => 'Makati City, Metro Manila', 'status' => 'active'],
-            ['name' => 'Branch BGC', 'location' => 'Bonifacio Global City, Taguig', 'status' => 'active'],
-            ['name' => 'Branch Cebu', 'location' => 'Cebu City, Cebu', 'status' => 'active'],
-            ['name' => 'Branch Davao', 'location' => 'Davao City, Davao del Sur', 'status' => 'active'],
-            ['name' => 'Branch Clark', 'location' => 'Clark Freeport Zone, Pampanga', 'status' => 'active'],
+            ['name' => 'Branch QC', 'location' => 'Quezon City, Metro Manila', 'latitude' => 14.6760, 'longitude' => 121.0437, 'status' => 'active'],
+            ['name' => 'Branch Makati', 'location' => 'Makati City, Metro Manila', 'latitude' => 14.5547, 'longitude' => 121.0500, 'status' => 'active'],
+            ['name' => 'Branch BGC', 'location' => 'Bonifacio Global City, Taguig', 'latitude' => 14.5510, 'longitude' => 121.0495, 'status' => 'active'],
+            ['name' => 'Branch Cebu', 'location' => 'Cebu City, Cebu', 'latitude' => 10.3157, 'longitude' => 123.8854, 'status' => 'active'],
+            ['name' => 'Branch Davao', 'location' => 'Davao City, Davao del Sur', 'latitude' => 7.1907, 'longitude' => 125.4553, 'status' => 'active'],
+            ['name' => 'Branch Clark', 'location' => 'Clark Freeport Zone, Pampanga', 'latitude' => 15.1849, 'longitude' => 120.5566, 'status' => 'active'],
         ])->map(fn ($data) => Branch::create($data));
 
         // Canonical demo manager referenced by README + Postman collection.
@@ -271,7 +271,16 @@ class DatabaseSeeder extends Seeder
             }
         }
 
+        // ── Suppliers (only if empty) ──────────────────────────────
+        $this->call(SupplierSeeder::class);
+
         // ── Meetings (only if empty) ─────────────────────────────────
         $this->call(MeetingSeeder::class);
+
+        // ── Sample data: customers, POs, equipment, etc. ────────────
+        $this->call(SampleDataSeeder::class);
+
+        // ── Live data: transactions, payments, alerts, etc. ──────────
+        $this->call(LiveDataSeeder::class);
     }
 }

@@ -26,11 +26,54 @@ class WorkersController extends Controller
         'rating',
     ];
 
+    /**
+     * Display the workers directory.
+     * Standalone: /business/workers — shows workers for the user's branch.
+     * When a branch_id query is given, shows that branch's workers (if authorized).
+     */
+    public function index(Request $request): \Illuminate\View\View
+    {
+        $user = $request->user();
+        $isManager = $user->isManager();
+        $branchId = $isManager ? $user->branch_id : null;
+
+        $branchIdQuery = $request->query('branch_id');
+        $targetBranchId = $branchIdQuery ? (int) $branchIdQuery : $branchId;
+
+        // If no target branch is set, the user (manager) has no branch to show
+        if ($isManager && !$targetBranchId) {
+            abort(404);
+        }
+
+        if ($isManager && $targetBranchId && $targetBranchId !== $user->branch_id) {
+            abort(403);
+        }
+
+        $workers = User::whereIn('role', self::MANAGED_ROLES)
+            ->when($targetBranchId, fn ($q) => $q->where('branch_id', $targetBranchId))
+            ->with('profile')
+            ->orderBy('name')
+            ->get();
+
+        $branches = \App\Models\Branch::when($isManager, fn ($q) => $q->where('id', $user->branch_id))
+            ->orderBy('name')
+            ->get();
+
+        $branch = \App\Models\Branch::findOrFail($targetBranchId ?? $branchId);
+
+        return view('branches.show', [
+            'branch'   => $branch,
+            'tab'      => 'workers',
+            'workers'  => $workers,
+            'all_branches' => $branches,
+        ]);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $authUser = $request->user();
 
-        if (! $authUser->isSuperAdmin() && ! $authUser->isManager()) {
+        if (! $authUser->isManager() && ! $authUser->isSuperAdmin()) {
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
@@ -78,7 +121,7 @@ class WorkersController extends Controller
 
         $authUser = $request->user();
 
-        if (! $authUser->isSuperAdmin() && ! $authUser->isManager()) {
+        if (! $authUser->isManager() && ! $authUser->isSuperAdmin()) {
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
@@ -135,7 +178,7 @@ class WorkersController extends Controller
 
         $authUser = $request->user();
 
-        if (! $authUser->isSuperAdmin() && ! $authUser->isManager()) {
+        if (! $authUser->isManager() && ! $authUser->isSuperAdmin()) {
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
@@ -183,7 +226,7 @@ class WorkersController extends Controller
 
         $authUser = $request->user();
 
-        if (! $authUser->isSuperAdmin() && ! $authUser->isManager()) {
+        if (! $authUser->isManager() && ! $authUser->isSuperAdmin()) {
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
@@ -208,7 +251,7 @@ class WorkersController extends Controller
 
         $authUser = $request->user();
 
-        if (! $authUser->isSuperAdmin() && ! $authUser->isManager()) {
+        if (! $authUser->isManager() && ! $authUser->isSuperAdmin()) {
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
@@ -238,7 +281,7 @@ class WorkersController extends Controller
     {
         $authUser = $request->user();
 
-        if (! $authUser->isSuperAdmin() && ! $authUser->isManager()) {
+        if (! $authUser->isManager() && ! $authUser->isSuperAdmin()) {
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
@@ -259,7 +302,7 @@ class WorkersController extends Controller
 
         $authUser = $request->user();
 
-        if (! $authUser->isSuperAdmin() && ! $authUser->isManager()) {
+        if (! $authUser->isManager() && ! $authUser->isSuperAdmin()) {
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
@@ -286,7 +329,7 @@ class WorkersController extends Controller
     {
         $authUser = $request->user();
 
-        if (! $authUser->isSuperAdmin() && ! $authUser->isManager()) {
+        if (! $authUser->isManager() && ! $authUser->isSuperAdmin()) {
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
@@ -307,7 +350,7 @@ class WorkersController extends Controller
     {
         $authUser = $request->user();
 
-        if (! $authUser->isSuperAdmin() && ! $authUser->isManager()) {
+        if (! $authUser->isManager() && ! $authUser->isSuperAdmin()) {
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 

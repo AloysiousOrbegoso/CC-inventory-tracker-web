@@ -15,10 +15,19 @@ use Illuminate\View\View;
 
 class BusinessRecipesController extends Controller
 {
-    public function __invoke(): View
+    public function __invoke(Request $request): View
     {
-        $user = auth()->user();
+        $user = $request->user();
+        if (!$user) {
+            // Fall back to auth facade
+            $user = auth()->user();
+        }
+        if (!$user) {
+            abort(401, 'Unauthenticated.');
+        }
         $isManager = $user->isManager();
+        $branchId = $request->query('branch_id', $user->branch_id);
+
         // Cost, profit, and margin are business intelligence a staff account
         // has no operational need to see -- they need ingredient/quantity
         // data to prep a product, not what it costs the business to make it.
@@ -34,39 +43,51 @@ class BusinessRecipesController extends Controller
             ->orderBy('name')
             ->get();
 
-        $this->markAvailability($products, $branches->pluck('id'));
+        try {
+            $this->markAvailability($products, $branches->pluck('id'));
 
-        if ($canSeeCosts) {
-            foreach ($products as $product) {
-                $product->cost_breakdown = $this->costBreakdown($product)['sizes'];
+            if ($canSeeCosts) {
+                foreach ($products as $product) {
+                    $product->cost_breakdown = $this->costBreakdown($product)['sizes'];
+                }
             }
+        } catch (\Throwable $e) {
+            \Log::error('BusinessRecipesController error: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            throw $e;
         }
 
         $allIngredients = Ingredient::orderBy('name')->get();
 
-        return view('business.recipes', [
+        try {
+            return view('business.recipes', [
             'branches'        => $branches,
             'categories'      => $categories,
             'products'        => $products,
             'allIngredients'  => $allIngredients,
             'canSeeCosts'     => $canSeeCosts,
         ]);
+        } catch (\Throwable $e) {
+            \Log::error('BusinessRecipesView error: ' . $e->getMessage(), ['line' => $e->getLine(), 'file' => $e->getFile()]);
+            throw $e;
+        }
     }
 
     /**
      * Tag each product with whether it can actually be sold right now.
-     *
-     * A product is unavailable if it has been discontinued, or if any
-     * ingredient its recipe needs is at zero stock in every branch the
-     * viewer can see. Stock is taken as the best figure across those
-     * branches — an owner looking at six branches should not see a drink
-     * marked unavailable because one branch ran out.
-     *
-     * @param  \Illuminate\Support\Collection<int, Product>  $products
-     * @param  \Illuminate\Support\Collection<int, int>  $branchIds
      */
     private function markAvailability($products, $branchIds): void
     {
+        if ($branchIds->isEmpty()) {
+            foreach ($products as $product) {
+                $product->availability = $product->is_active ? 'available' : 'discontinued';
+                $product->missing_ingredients = collect();
+            }
+            return;
+        }
+
         $stock = BranchStock::whereIn('branch_id', $branchIds)
             ->get()
             ->groupBy('ingredient_id')
@@ -253,8 +274,8 @@ class BusinessRecipesController extends Controller
     {
         $user = Auth::user();
 
-        if (! $user->isSuperAdmin()) {
-            abort(403, 'Only the account owner can delete products.');
+        if (! $user->isSuperAdmin() && ! $user->isManager()) {
+            abort(403, 'You do not have permission to delete products.');
         }
 
         $product->recipes()->delete();
@@ -287,16 +308,9 @@ class BusinessRecipesController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->isSuperAdmin()) {
-            return;
+        // Owners (super_admin) and managers can edit recipes
+        if (! $user->isSuperAdmin() && ! $user->isManager()) {
+            abort(403, 'You do not have permission to edit recipes.');
         }
-
-        if ($user->isManager()) {
-            // Managers can edit — products are global, not branch-scoped.
-            // If branch-scoping is needed later, check $product->branch_id here.
-            return;
-        }
-
-        abort(403, 'You do not have permission to edit recipes.');
     }
 }

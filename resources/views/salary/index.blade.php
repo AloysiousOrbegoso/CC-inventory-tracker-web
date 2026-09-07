@@ -39,9 +39,10 @@
     @endif
     <div class="summary-table-wrap">
         @if ($workers->isEmpty())
-            <div class="empty-state-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                <span class="empty-state-text">No workers on record yet.</span>
+            <div class="empty-state-icon" style="padding:32px 20px">
+                <div style="font-size:32px;margin-bottom:8px">👥</div>
+                <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">No workers yet</div>
+                <div style="font-size:12px;color:var(--text-2)">Add workers and set their hourly rates to generate payslips.</div>
             </div>
         @else
             <table class="summary-table">
@@ -52,8 +53,8 @@
                         <td class="font-bold">{{ $worker->name }}</td>
                         <td>{{ $worker->branch?->name ?? '—' }}</td>
                         <td>
-                            @if (auth()->user()->isSuperAdmin())
-                                {{-- Setting pay is an owner decision; managers see the rate but can't change it. --}}
+                            @if (auth()->user()->isManager())
+                                {{-- Setting pay is a manager decision --}}
                                 <div class="flex items-center gap-1.5">
                                     <span>&#8369;</span>
                                     <input type="number" step="0.01" min="0" class="form-input !h-8 !w-[100px] !py-1 !text-[12px]" id="rate-{{ $worker->id }}" value="{{ $worker->profile?->hourly_rate ?? '' }}" placeholder="{{ $worker->profile?->hourly_rate ? '0.00' : 'Not set' }}">
@@ -63,7 +64,7 @@
                                 <span class="font-semibold">{{ $worker->profile?->hourly_rate ? '₱'.number_format($worker->profile->hourly_rate, 2) : '—' }}</span>
                             @endif
                         </td>
-                        <td><button class="btn-sm" onclick="openGenerateModal({{ $worker->id }}, '{{ addslashes($worker->name) }}')">Generate Payslip</button></td>
+                        <td>@if(auth()->user()->isManager())<button class="btn-sm" onclick="openGenerateModal({{ $worker->id }}, '{{ addslashes($worker->name) }}')">Generate Payslip</button>@endif</td>
                     </tr>
                     @endforeach
                 </tbody>
@@ -86,9 +87,10 @@
     @endif
     <div class="summary-table-wrap">
         @if ($payslips->isEmpty())
-            <div class="empty-state-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="11" x2="15" y2="11"/></svg>
-                <span class="empty-state-text">No payslips generated yet.</span>
+            <div class="empty-state-icon" style="padding:32px 20px">
+                <div style="font-size:32px;margin-bottom:8px">📄</div>
+                <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">No payslips yet</div>
+                <div style="font-size:12px;color:var(--text-2)">Generate payslips from clocked shift hours once workers start logging time.</div>
             </div>
         @else
             <table class="summary-table">

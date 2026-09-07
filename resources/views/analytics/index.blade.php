@@ -401,9 +401,10 @@
                             </div>
                         </div>
                     @empty
-                        <div class="empty-state-icon">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="11" x2="15" y2="11"/></svg>
-                            <span class="empty-state-text">No transactions recorded yet.</span>
+                        <div class="empty-state-icon" style="padding:20px 16px">
+                            <div style="font-size:22px;margin-bottom:6px">🧾</div>
+                            <div style="font-size:12px;font-weight:600;color:var(--text)">No transactions yet</div>
+                            <div style="font-size:11px;color:var(--text-3)">Transactions will appear as sales are recorded.</div>
                         </div>
                     @endforelse
                 </div>
@@ -423,9 +424,10 @@
                             </span>
                         </div>
                     @empty
-                        <div class="empty-state-icon">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c4.97 0 9-3.582 9-8 0-4.418-4.03-11-9-13-4.97 2-9 8.582-9 13 0 4.418 4.03 8 9 8z"/></svg>
-                            <span class="empty-state-text">No leakage data.</span>
+                        <div class="empty-state-icon" style="padding:20px 16px">
+                            <div style="font-size:22px;margin-bottom:6px">✅</div>
+                            <div style="font-size:12px;font-weight:600;color:var(--text)">No leakage detected</div>
+                            <div style="font-size:11px;color:var(--text-3)">All inventory is accounted for.</div>
                         </div>
                     @endforelse
                 </div>
@@ -446,9 +448,10 @@
                             <span class="status-badge {{ $alert->severity }}">{{ ucfirst($alert->severity) }}</span>
                         </a>
                     @empty
-                        <div class="empty-state-icon">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-                            <span class="empty-state-text">No flags detected.</span>
+                        <div class="empty-state-icon" style="padding:20px 16px">
+                            <div style="font-size:22px;margin-bottom:6px">✅</div>
+                            <div style="font-size:12px;font-weight:600;color:var(--text)">No flags detected</div>
+                            <div style="font-size:11px;color:var(--text-3)">All stock levels are normal.</div>
                         </div>
                     @endforelse
                 </div>
@@ -582,7 +585,11 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" style="text-align:center;opacity:.4;padding:24px;">No inventory items found.</td></tr>
+                        <tr><td colspan="6" style="text-align:center;padding:24px;">
+                            <div style="font-size:22px;margin-bottom:6px">📦</div>
+                            <div style="font-size:12px;font-weight:600;color:var(--text)">No inventory items yet</div>
+                            <div style="font-size:11px;color:var(--text-3)">Add ingredients and stock to see inventory data here.</div>
+                        </td></tr>
                     @endforelse
                 </tbody>
             </table>

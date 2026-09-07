@@ -22,9 +22,10 @@
             </div>
 
             @if ($product->recipes->isEmpty())
-                <div class="empty-state-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>
-                    <span class="empty-state-text">No ingredients assigned to this product yet.</span>
+                <div class="empty-state-icon" style="padding:20px 16px">
+                    <div style="font-size:22px;margin-bottom:6px">🧂</div>
+                    <div style="font-size:12px;font-weight:600;color:var(--text)">No ingredients assigned</div>
+                    <div style="font-size:11px;color:var(--text-3)">Add ingredients from the recipe editor.</div>
                 </div>
             @else
                 <table class="data-table">
@@ -79,9 +80,10 @@
         </div>
     @empty
         <div class="widget">
-            <div class="empty-state-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                <span class="empty-state-text">No products in the catalog yet.</span>
+            <div class="empty-state-icon" style="padding:24px 16px">
+                <div style="font-size:24px;margin-bottom:6px">📖</div>
+                <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px">No products yet</div>
+                <div style="font-size:11px;color:var(--text-3)">Add products and their recipes to build your menu catalog.</div>
             </div>
         </div>
     @endforelse

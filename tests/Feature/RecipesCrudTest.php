@@ -211,12 +211,20 @@ class RecipesCrudTest extends TestCase
         $this->assertDatabaseMissing('products', ['id' => $this->product->id]);
     }
 
-    public function test_manager_cannot_delete_product(): void
+    public function test_manager_can_delete_product(): void
     {
+        Recipe::create([
+            'product_id' => $this->product->id,
+            'ingredient_id' => $this->ingredient->id,
+            'size' => Recipe::SIZE_REGULAR,
+            'quantity_required' => 10,
+        ]);
+
         $response = $this->actingAs($this->manager)
             ->postJson('/business/recipes/product/'.$this->product->id.'/delete');
 
-        $response->assertStatus(403);
+        $response->assertStatus(200)->assertJsonPath('message', 'Product deleted successfully.');
+        $this->assertDatabaseMissing('products', ['id' => $this->product->id]);
     }
 
     public function test_get_product_data_without_recipes(): void

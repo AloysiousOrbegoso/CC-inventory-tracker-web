@@ -39,30 +39,32 @@
         <div class="text-[13px] text-ink-2 mt-0.5">Monitor business health across all branches.</div>
     </div>
     <div class="flex items-center gap-2 flex-wrap">
-        <a href="{{ route('business.workers') }}" class="btn-pill">+ Add Employee</a>
+        <a href="{{ route('branches') }}" class="btn-pill">+ Add Employee</a>
         <a href="{{ route('payments.index') }}" class="btn-pill">+ Record Payment</a>
         <a href="{{ route('receipts.index') }}" class="btn-pill">+ Scan Receipt</a>
         <a href="{{ route('branches') }}" class="btn-pill">+ Add Branch</a>
     </div>
 </div>
 
-{{-- ══ Branch Health Summary ══ --}}
-<div class="card p-5 mb-5">
-    <div class="text-[11px] font-bold uppercase tracking-[.06em] opacity-50 mb-3.5">Branch Health</div>
-    <div class="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-3">
-        @foreach ($branch_health as $b)
-            <div class="flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-lg border {{ $b['is_warning'] ? 'bg-[rgba(230,57,70,.05)] border-[rgba(230,57,70,.18)]' : 'bg-green-600/[.04] border-green-600/[.14]' }}">
-                <span class="text-[13px] font-semibold truncate">{{ $b['name'] }}</span>
-                @if ($b['is_warning'])
-                    <span class="text-base leading-none shrink-0" title="{{ $b['pending_alerts'] }} pending alert(s)">⚠️</span>
-                @else
-                    <span class="text-base leading-none shrink-0" title="No pending alerts">✅</span>
-                @endif
-            </div>
-        @endforeach
+@if($total_branches === 0)
+<div class="ncard" style="text-align:center;padding:32px 20px;margin-bottom:20px;background:linear-gradient(135deg,rgba(188,97,75,.04),rgba(188,97,75,.01));border:1.5px dashed var(--accent)">
+    <div style="font-size:40px;margin-bottom:10px">🚀</div>
+    <div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:6px">Welcome to InvenTrackr!</div>
+    <div style="font-size:13px;color:var(--text-2);margin-bottom:18px;max-width:400px;margin-left:auto;margin-right:auto">Get started by adding your first branch. Once you have branches, this dashboard will show revenue, alerts, stock levels, and employee status across your business.</div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <a href="{{ route('branches') }}" class="btn-pill" style="text-decoration:none">+ Add Your First Branch</a>
+        <a href="{{ route('receipts.index') }}" class="btn-pill" style="text-decoration:none">+ Scan a Receipt</a>
+    </div>
+    <div style="margin-top:18px;display:flex;gap:20px;justify-content:center;font-size:11px;color:var(--text-3)">
+        <span>📊 Revenue tracking</span>
+        <span>⚠️ Stock alerts</span>
+        <span>👥 Employee management</span>
+        <span>🗺️ Map view</span>
     </div>
 </div>
+@endif
 
+{{-- ══ Branch Health Summary ══ --}}
 {{-- ══ Headline figures ══ --}}
 <div class="grid grid-cols-1 gap-5 mb-5 sm:grid-cols-2 lg:grid-cols-4">
     <div class="ncard relative">

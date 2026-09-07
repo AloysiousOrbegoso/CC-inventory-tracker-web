@@ -32,16 +32,24 @@
                     <td>{{ $ingredient->recipes()->count() }}</td>
                     <td>{{ $ingredient->created_at?->format('M d, Y') ?? '—' }}</td>
                     <td style="text-align:right">
+                        @if(auth()->user()->isManager())
                         <button class="btn-sm" onclick="openEditModal({{ $ingredient->id }}, '{{ addslashes($ingredient->name) }}', '{{ addslashes($ingredient->unit) }}')">Edit</button>
                         <button class="btn-sm danger" onclick="openDeleteModal({{ $ingredient->id }}, '{{ addslashes($ingredient->name) }}')">Delete</button>
+                        @endif
                     </td>
                 </tr>
             @empty
                 <tr>
                     <td colspan="5">
-                        <div class="empty-state-icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>
-                            <span class="empty-state-text">No ingredients found. Click "Add Ingredient" to get started.</span>
+                        <div class="empty-state-icon" style="padding:32px 20px">
+                            <div style="font-size:32px;margin-bottom:8px">🧂</div>
+                            <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">No ingredients yet</div>
+                            <div style="font-size:12px;color:var(--text-2);margin-bottom:12px">Add your raw materials to build recipes and track inventory.</div>
+                            <div style="padding:10px 14px;background:var(--bg);border-radius:8px;text-align:left;font-size:11px;color:var(--text-2);max-width:240px;margin:0 auto">
+                                <div style="font-weight:600;color:var(--text);margin-bottom:4px">Units supported:</div>
+                                <div>g, kg, ml, L, pcs, cup, tbsp, tsp, oz, lb</div>
+                            </div>
+                            <button class="btn-primary" style="margin-top:14px" onclick="openAddModal()">+ Add First Ingredient</button>
                         </div>
                     </td>
                 </tr>

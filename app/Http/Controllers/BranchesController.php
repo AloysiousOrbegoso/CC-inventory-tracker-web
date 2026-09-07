@@ -37,18 +37,78 @@ class BranchesController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'location' => ['nullable', 'string', 'max:500'],
+            'street_address' => ['nullable', 'string', 'max:500'],
+            'city' => ['nullable', 'string', 'max:255'],
+            'province' => ['nullable', 'string', 'max:255'],
+            'zip_code' => ['nullable', 'string', 'max:20'],
+            'phone' => ['nullable', 'string', 'max:50'],
+            'email' => ['nullable', 'email', 'max:255'],
         ]);
+
+        // Build a combined location string from structured address
+        $locationParts = array_filter([
+            $validated['street_address'] ?? null,
+            $validated['city'] ?? null,
+            $validated['province'] ?? null,
+            $validated['zip_code'] ?? null,
+        ]);
+        $combinedLocation = !empty($locationParts) ? implode(', ', $locationParts) : null;
 
         $branch = Branch::create([
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
-            'location' => $validated['location'] ?? null,
+            'location' => $combinedLocation,
+            'street_address' => $validated['street_address'] ?? null,
+            'city' => $validated['city'] ?? null,
+            'province' => $validated['province'] ?? null,
+            'zip_code' => $validated['zip_code'] ?? null,
+            'phone' => $validated['phone'] ?? null,
+            'email' => $validated['email'] ?? null,
             'status' => 'active',
         ]);
 
+        // Auto-geocode the address if we have enough info
+        if ($combinedLocation) {
+            $coords = $this->geocodeAddress($combinedLocation);
+            if ($coords) {
+                $branch->update([
+                    'latitude' => $coords['lat'],
+                    'longitude' => $coords['lng'],
+                ]);
+            }
+        }
+
         return redirect()->route('branches')
             ->with('success', 'Business added successfully!');
+    }
+
+    /**
+     * Geocode an address string via Nominatim.
+     */
+    private function geocodeAddress(string $address): ?array
+    {
+        try {
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
+                'User-Agent' => 'InvenTrack/1.0 (inventory-tracker)',
+            ])->timeout(10)->get('https://nominatim.openstreetmap.org/search', [
+                'q' => $address . ', Philippines',
+                'format' => 'json',
+                'limit' => 1,
+                'addressdetails' => 0,
+            ]);
+
+            if ($response->successful() && count($response->json()) > 0) {
+                $result = $response->json()[0];
+                return [
+                    'lat' => (float) $result['lat'],
+                    'lng' => (float) $result['lon'],
+                ];
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Geocoding failed for branch: ' . $address, ['error' => $e->getMessage()]);
+        }
+
+        return null;
     }
 
     public function updateDescription(Request $request, Branch $branch)

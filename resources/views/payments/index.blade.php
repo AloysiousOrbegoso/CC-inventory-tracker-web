@@ -11,10 +11,12 @@
         <div class="text-[22px] font-extrabold tracking-tight">Payments</div>
         <div class="text-[13px] text-ink-2 mt-0.5">Rent, utilities, supplier invoices, and other outgoing expenses</div>
     </div>
+    @if(auth()->user()->isManager())
     <button type="button" class="btn-primary" onclick="openPaymentModal()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Record Payment
     </button>
+    @endif
 </div>
 
 <div class="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-3 mb-6">
@@ -45,9 +47,18 @@
 
 <div class="summary-table-wrap">
     @if ($payments->isEmpty())
-        <div class="empty-state-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-            <span class="empty-state-text">No payments recorded yet.</span>
+        <div class="empty-state-icon" style="padding:32px 20px">
+            <div style="font-size:32px;margin-bottom:8px">💳</div>
+            <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">No payments yet</div>
+            <div style="font-size:12px;color:var(--text-2);margin-bottom:12px">Track rent, utilities, supplier invoices, and other expenses.</div>
+            <div style="padding:10px 14px;background:var(--bg);border-radius:8px;text-align:left;font-size:11px;color:var(--text-2);max-width:260px;margin:0 auto">
+                <div style="font-weight:600;color:var(--text);margin-bottom:4px">💰 Expense categories:</div>
+                <div style="margin-bottom:3px">• Rent & Utilities</div>
+                <div style="margin-bottom:3px">• Supplier Invoices</div>
+                <div style="margin-bottom:3px">• Equipment Maintenance</div>
+                <div>• Marketing & Miscellaneous</div>
+            </div>
+            <button class="btn-primary" style="margin-top:14px" onclick="openPaymentModal()">+ Record First Payment</button>
         </div>
     @else
         <table class="summary-table">
@@ -76,8 +87,10 @@
                             @if ($payment->status !== 'paid')
                                 <button class="btn-sm" onclick="markPaid({{ $payment->id }})">Mark Paid</button>
                             @endif
+                            @if(auth()->user()->isManager())
                             <button class="btn-sm" onclick='openEditModal(@json($payment))'>Edit</button>
                             <button class="btn-sm danger" onclick="deletePayment({{ $payment->id }}, '{{ addslashes($payment->payee) }}')">Del</button>
+                            @endif
                         </div>
                     </td>
                 </tr>

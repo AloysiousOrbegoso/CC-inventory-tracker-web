@@ -4,6 +4,57 @@
     $selectedBranch = $selectedBranchId ? $branches->firstWhere('id', $selectedBranchId) : $branches->first();
 @endphp
 
+<style>
+    .biz-header-bar {
+        position: sticky; top: 0; z-index: 40;
+        background: rgba(255,255,255,.95); backdrop-filter: blur(8px);
+        border-bottom: 1px solid var(--border);
+        padding: 14px 0; margin-bottom: 16px;
+    }
+    .biz-header-bar__inner {
+        display: flex; align-items: center; justify-content: space-between;
+    }
+    .biz-header-bar__left {
+        display: flex; align-items: center; gap: 20px;
+    }
+    .biz-header-bar__title {
+        font-size: 20px; font-weight: 800; text-transform: uppercase;
+        letter-spacing: .02em; margin: 0; padding: 0; line-height: 1.2;
+    }
+    .biz-header-bar__sep { font-weight: 400; opacity: .5; margin: 0 4px; }
+    .biz-header-bar__dots-wrap { display: flex; flex-direction: column; gap: 4px; }
+    .biz-header-bar__dots { display: flex; gap: 6px; }
+    .biz-header-bar__branch-info {
+        display: flex; align-items: center; gap: 6px; font-size: 11px; opacity: .55;
+    }
+    .biz-header-bar__branch-name { font-weight: 600; }
+    .biz-header-bar__branch-loc { font-weight: 400; }
+    .biz-header-bar__branch-loc::before { content: '\2014'; margin-right: 6px; opacity: .5; }
+    .biz-header-bar__tabs { display: flex; gap: 6px; }
+    .branch-dot-sm {
+        width: 28px; height: 28px; border-radius: 50%;
+        background: rgba(253,245,214,.9); border: 1.5px solid rgba(92,45,27,.25);
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 9px; font-weight: 700; color: var(--text);
+        cursor: pointer; transition: all .12s ease; text-decoration: none;
+    }
+    .branch-dot-sm.is-active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .branch-dot-sm:hover { transform: scale(1.1); background: var(--accent); color: #fff; }
+    .sub-tab {
+        display: flex; align-items: center; gap: 6px;
+        padding: 7px 16px; border-radius: 999px; font-size: 12px; font-weight: 600;
+        color: var(--text); border: 1.5px solid var(--border); background: #fff;
+        text-decoration: none; transition: all .15s ease; white-space: nowrap;
+    }
+    .sub-tab:hover { border-color: var(--accent); color: var(--accent); }
+    .sub-tab.is-active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .sub-tab.is-active svg { stroke: #fff; }
+    @media (max-width: 900px) {
+        .biz-header-bar__inner { flex-wrap: wrap; gap: 12px; }
+        .biz-header-bar__title { font-size: 16px; }
+    }
+</style>
+
 <div class="biz-header-bar">
     <div class="biz-header-bar__inner">
         <div class="biz-header-bar__left">

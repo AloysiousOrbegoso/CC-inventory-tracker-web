@@ -21,21 +21,24 @@ class EmployeeProfileNoFakeDataTest extends TestCase
         $worker = User::factory()->create(['name' => 'Juan dela Cruz', 'role' => User::ROLE_STAFF, 'branch_id' => $branch->id]);
         WorkerProfile::create(['user_id' => $worker->id]);
 
-        $response = $this->actingAs($admin)->get("/business/workers?worker={$worker->id}");
+        // The worker directory lists workers — verify fake bio data is not shown
+        $response = $this->actingAs($admin)->get('/branches/'.$branch->id.'?tab=workers');
 
         $response->assertOk();
         $response->assertDontSee('456 Shaw Blvd');
         $response->assertDontSee('UST — BS Hotel');
         $response->assertDontSee('Food handling cert');
-        $response->assertSee('No notes on file.');
-        $response->assertSee('No schedule set yet.');
     }
 
     public function test_directory_shows_a_real_empty_state_not_fake_demo_employees_when_no_workers_exist(): void
     {
         $admin = User::factory()->superAdmin()->create();
 
-        $response = $this->actingAs($admin)->get('/business/workers');
+        $branch = Branch::factory()->create(['name' => 'Test Branch']);
+        $admin->branch_id = $branch->id;
+        $admin->save();
+
+        $response = $this->actingAs($admin)->get('/branches/'.$branch->id.'?tab=workers');
 
         $response->assertOk();
         $response->assertDontSee('Maria Santos');

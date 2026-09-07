@@ -31,9 +31,18 @@
             <p class="text-[13px] text-ink mt-2.5 leading-relaxed whitespace-pre-line">{{ $notice->body }}</p>
         </div>
     @empty
-        <div class="card empty-state-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>
-            <span class="empty-state-text">No messages yet. Click "Compose" to post the first one.</span>
+        <div class="card" style="text-align:center;padding:32px 20px">
+            <div style="font-size:32px;margin-bottom:8px">📬</div>
+            <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">No messages yet</div>
+            <div style="font-size:12px;color:var(--text-2);margin-bottom:12px">Post company-wide notices, schedule updates, or announcements for your team.</div>
+            <div style="padding:10px 14px;background:var(--bg);border-radius:8px;text-align:left;font-size:11px;color:var(--text-2);max-width:260px;margin:0 auto">
+                <div style="font-weight:600;color:var(--text);margin-bottom:4px">💡 Good for:</div>
+                <div style="margin-bottom:3px">• Holiday schedule changes</div>
+                <div style="margin-bottom:3px">• New policy announcements</div>
+                <div style="margin-bottom:3px">• Team shoutouts and recognition</div>
+                <div>• Urgent operational updates</div>
+            </div>
+            <button class="btn-primary" style="margin-top:14px" onclick="openComposeModal()">+ Post First Message</button>
         </div>
     @endforelse
 </div>

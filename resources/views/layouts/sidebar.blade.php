@@ -16,10 +16,11 @@
 
         /* ═══ SIDEBAR ═══ */
         .sidebar {
-            width: var(--sidebar-w); min-height: 100vh; position: fixed; left: 0; top: 0;
+            width: var(--sidebar-w); height: 100vh; position: fixed; left: 0; top: 0;
             background: var(--card); border-right: 1px solid var(--border);
             display: flex; flex-direction: column; z-index: 100;
             padding: 20px 0;
+            overflow: hidden;
         }
 
         .sidebar__brand {
@@ -34,7 +35,7 @@
         }
         .sidebar__brand-text { font-size: 18px; font-weight: 900; color: var(--text); letter-spacing: -.02em; }
 
-        .sidebar__nav { flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 0 12px; }
+        .sidebar__nav { flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 0 12px; overflow-y: auto; }
 
         /* Nav reads as a terracotta list, matching the approved design. */
         .sidebar__link {
@@ -55,6 +56,39 @@
         .sidebar__link .badge-count {
             margin-left: auto; background: var(--accent-2); color: #fff;
             font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 99px;
+        }
+
+        /* Collapsible group headers */
+        .sidebar__group {
+            margin-bottom: 4px;
+        }
+        .sidebar__group-header {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 14px; border-radius: 8px;
+            font-size: 11px; font-weight: 700; color: var(--text-3);
+            text-transform: uppercase; letter-spacing: .06em;
+            cursor: pointer; user-select: none;
+            transition: all .15s;
+        }
+        .sidebar__group-header:hover { color: var(--text-2); }
+        .sidebar__group-header svg {
+            width: 12px; height: 12px; flex-shrink: 0;
+            transition: transform .2s;
+        }
+        .sidebar__group.open .sidebar__group-header svg {
+            transform: rotate(90deg);
+        }
+        .sidebar__group-items {
+            display: none;
+            padding-left: 8px;
+            animation: slideDown .2s ease;
+        }
+        .sidebar__group.open .sidebar__group-items {
+            display: block;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* Groups are separated by a rule rather than a caption, so the nav
@@ -131,6 +165,17 @@
     // the links here just avoids offering a user a door that 403s.
     $isOwner = $user->isSuperAdmin();
     $canSeeFinancials = $user->hasRole(\App\Models\User::ROLE_SUPER_ADMIN, \App\Models\User::ROLE_MANAGER);
+
+    // Employees link: point to the first branch's workers tab
+    $employeeBranch = $user->isManager()
+        ? \App\Models\Branch::find($user->branch_id)
+        : \App\Models\Branch::where('status', 'active')->first();
+    $employeesUrl = $employeeBranch ? route('branches.show', $employeeBranch) . '?tab=workers' : route('branches');
+
+    // Active-state helpers — each link gets its own check so only one highlights
+    $isBusinessActive = $currentRoute === 'branches';
+    $currentTab = request()->query('tab', '');
+    $isEmployeesActive = $currentRoute === 'branches.show' && $currentTab === 'workers';
 @endphp
 
 <aside class="sidebar">
@@ -144,58 +189,190 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
             Dashboard
         </a>
+        <a href="{{ route('map') }}" class="sidebar__link {{ $currentRoute === 'map' ? 'is-active' : '' }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Map
+        </a>
         @endunless
+
         @if ($canSeeFinancials)
-        <a href="{{ route('calendar') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'calendar') ? 'is-active' : '' }}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Calendar
-        </a>
-        <a href="{{ route('business.recipes') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'business') && $currentRoute !== 'business.workers' ? 'is-active' : '' }}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-            Business
-        </a>
-        <a href="{{ route('reports') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'reports') ? 'is-active' : '' }}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            Reports
-        </a>
+        {{-- ── Planning ──────────────────────────────────────── --}}
+        @php
+            $isPlanningOpen = str_starts_with($currentRoute, 'calendar') || str_starts_with($currentRoute, 'leave');
+        @endphp
+        <div class="sidebar__group {{ $isPlanningOpen ? 'open' : '' }}">
+            <div class="sidebar__group-header" onclick="toggleGroup(this.parentElement, 'planning')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                Planning
+            </div>
+            <div class="sidebar__group-items">
+                <a href="{{ route('calendar') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'calendar') ? 'is-active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    Calendar
+                </a>
+                <a href="{{ route('leave.index') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'leave') ? 'is-active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 16l2 2 4-4"/></svg>
+                    Leave Requests
+                </a>
+            </div>
+        </div>
 
-        <div class="sidebar__divider"></div>
-        <a href="{{ route('payments.index') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'payments') ? 'is-active' : '' }}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-            Payments
-        </a>
-        <a href="{{ route('receipts.index') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'receipts') ? 'is-active' : '' }}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
-            Receipts
-        </a>
-        <a href="{{ route('salary.index') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'salary') ? 'is-active' : '' }}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
-            Salary
-        </a>
-        <a href="{{ route('analytics') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'analytics') ? 'is-active' : '' }}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-            Analytics
-        </a>
+        {{-- ── Business ──────────────────────────────────────── --}}
+        @php
+            $isBusinessOpen = $isBusinessActive || $isEmployeesActive || str_starts_with($currentRoute, 'hiring') || str_starts_with($currentRoute, 'customers');
+        @endphp
+        <div class="sidebar__group {{ $isBusinessOpen ? 'open' : '' }}">
+            <div class="sidebar__group-header" onclick="toggleGroup(this.parentElement, 'business')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                Business
+            </div>
+            <div class="sidebar__group-items">
+                <a href="{{ route('branches') }}" class="sidebar__link {{ $isBusinessActive ? 'is-active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                    Branches
+                </a>
+                <a href="{{ $employeesUrl }}" class="sidebar__link {{ $isEmployeesActive ? 'is-active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                    Employees
+                </a>
+                <a href="{{ route('hiring.index') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'hiring') ? 'is-active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                    Hiring
+                    @if ($pendingApplicantCount > 0)
+                        <span class="badge-count">{{ $pendingApplicantCount }}</span>
+                    @endif
+                </a>
+                <a href="{{ route('customers.index') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'customers') ? 'is-active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    Customers
+                </a>
+            </div>
+        </div>
 
-        <div class="sidebar__divider"></div>
-        <a href="{{ route('business.workers') }}" class="sidebar__link {{ $currentRoute === 'business.workers' ? 'is-active' : '' }}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-            Employees
-        </a>
-        <a href="{{ route('hiring.index') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'hiring') ? 'is-active' : '' }}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-            Hiring
-            @if ($pendingApplicantCount > 0)
-                <span class="badge-count">{{ $pendingApplicantCount }}</span>
-            @endif
-        </a>
-        <a href="{{ route('legal-papers.index') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'legal-papers') ? 'is-active' : '' }}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="M12 22V12"/><path d="M3 7l9 5 9-5"/></svg>
-            Legal Papers
-        </a>
+        {{-- ── Finance ───────────────────────────────────────── --}}
+        @php
+            $isFinanceOpen = str_starts_with($currentRoute, 'payments') || str_starts_with($currentRoute, 'receipts') || str_starts_with($currentRoute, 'salary') || $currentRoute === 'profit-loss' || str_starts_with($currentRoute, 'invoices');
+        @endphp
+        <div class="sidebar__group {{ $isFinanceOpen ? 'open' : '' }}">
+            <div class="sidebar__group-header" onclick="toggleGroup(this.parentElement, 'finance')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                Finance
+            </div>
+            <div class="sidebar__group-items">
+                <a href="{{ route('profit-loss') }}" class="sidebar__link {{ $currentRoute === 'profit-loss' ? 'is-active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    Profit & Loss
+                </a>
+                <a href="{{ route('payments.index') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'payments') ? 'is-active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                    Payments
+                </a>
+                <a href="{{ route('invoices.index') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'invoices') ? 'is-active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
+                    Invoices
+                </a>
+                <a href="{{ route('salary.index') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'salary') ? 'is-active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+                    Salary
+                </a>
+                <a href="{{ route('receipts.index') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'receipts') ? 'is-active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
+                    Receipts
+                </a>
+            </div>
+        </div>
+
+        {{-- ── Analytics ─────────────────────────────────────── --}}
+        @php
+            $isAnalyticsOpen = str_starts_with($currentRoute, 'analytics') || str_starts_with($currentRoute, 'reports') || $currentRoute === 'forecasting' || $currentRoute === 'benchmarking';
+        @endphp
+        <div class="sidebar__group {{ $isAnalyticsOpen ? 'open' : '' }}">
+            <div class="sidebar__group-header" onclick="toggleGroup(this.parentElement, 'analytics')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                Analytics
+            </div>
+            <div class="sidebar__group-items">
+                <a href="{{ route('analytics') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'analytics') ? 'is-active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    Dashboard
+                </a>
+                <a href="{{ route('reports') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'reports') ? 'is-active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    Reports
+                </a>
+                <a href="{{ route('reports.custom') }}" class="sidebar__link {{ $currentRoute === 'reports.custom' || $currentRoute === 'reports.custom.generate' ? 'is-active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
+                    Custom Reports
+                </a>
+                <a href="{{ route('forecasting') }}" class="sidebar__link {{ $currentRoute === 'forecasting' ? 'is-active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    Forecasting
+                </a>
+                <a href="{{ route('benchmarking') }}" class="sidebar__link {{ $currentRoute === 'benchmarking' ? 'is-active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                    Benchmarking
+                </a>
+            </div>
+        </div>
+
+        {{-- ── Operations ────────────────────────────────────── --}}
+        @php
+            $isOpsOpen = str_starts_with($currentRoute, 'inventory') || str_starts_with($currentRoute, 'purchase-orders') || $currentRoute === 'pricing.ingredients';
+        @endphp
+        <div class="sidebar__group {{ $isOpsOpen ? 'open' : '' }}">
+            <div class="sidebar__group-header" onclick="toggleGroup(this.parentElement, 'operations')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                Operations
+            </div>
+            <div class="sidebar__group-items">
+                <a href="{{ route('inventory.intelligence') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'inventory') ? 'is-active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                    Inventory
+                </a>
+                <a href="{{ route('purchase-orders.index') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'purchase-orders') ? 'is-active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
+                    Purchase Orders
+                </a>
+                <a href="{{ route('pricing.ingredients') }}" class="sidebar__link {{ $currentRoute === 'pricing.ingredients' ? 'is-active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    Ingredient Pricing
+                </a>
+            </div>
+        </div>
+
+        {{-- ── Compliance ────────────────────────────────────── --}}
+        @php
+            $isComplianceOpen = str_starts_with($currentRoute, 'equipment') || str_starts_with($currentRoute, 'safety') || str_starts_with($currentRoute, 'audit') || str_starts_with($currentRoute, 'legal-papers');
+        @endphp
+        <div class="sidebar__group {{ $isComplianceOpen ? 'open' : '' }}">
+            <div class="sidebar__group-header" onclick="toggleGroup(this.parentElement, 'compliance')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                Compliance
+            </div>
+            <div class="sidebar__group-items">
+                <a href="{{ route('equipment.index') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'equipment') ? 'is-active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    Equipment
+                </a>
+                <a href="{{ route('safety.index') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'safety') ? 'is-active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    Health & Safety
+                </a>
+                <a href="{{ route('audit.index') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'audit') ? 'is-active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    Audit Trail
+                </a>
+                <a href="{{ route('legal-papers.index') }}" class="sidebar__link {{ str_starts_with($currentRoute, 'legal-papers') ? 'is-active' : '' }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="M12 22V12"/><path d="M3 7l9 5 9-5"/></svg>
+                    Legal Papers
+                </a>
+            </div>
+        </div>
         @endif
 
         <div class="sidebar__divider"></div>
+
+        {{-- ── Settings & Help ───────────────────────────────── --}}
         <a href="{{ route('settings') }}" class="sidebar__link {{ $currentRoute === 'settings' ? 'is-active' : '' }}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             Settings
@@ -204,15 +381,9 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
             Mail/Messages
         </a>
-
-        <div class="sidebar__divider"></div>
         <a href="{{ route('help') }}" class="sidebar__link {{ $currentRoute === 'help' ? 'is-active' : '' }}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             Help Center
-        </a>
-        <a href="{{ route('about') }}" class="sidebar__link {{ $currentRoute === 'about' ? 'is-active' : '' }}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-            About
         </a>
     </nav>
 
@@ -365,6 +536,76 @@
                 dropdown.style.display = 'none';
             }
         });
+    })();
+
+    // ═══ SIDEBAR STATE PERSISTENCE ═══
+    // Runs immediately to prevent visual jumping
+    (function() {
+        const STORAGE_KEY = 'sidebar_state';
+        
+        function getState() {
+            try {
+                return JSON.parse(sessionStorage.getItem(STORAGE_KEY)) || {};
+            } catch(e) {
+                return {};
+            }
+        }
+        
+        function saveState(state) {
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+        
+        // Toggle group and save
+        window.toggleGroup = function(groupEl, groupName) {
+            groupEl.classList.toggle('open');
+            const state = getState();
+            state.groups = state.groups || {};
+            state.groups[groupName] = groupEl.classList.contains('open');
+            saveState(state);
+        };
+        
+        // Run IMMEDIATELY — not on DOMContentLoaded
+        const state = getState();
+        const nav = document.querySelector('.sidebar__nav');
+        
+        // Restore group states immediately
+        if (state.groups) {
+            document.querySelectorAll('.sidebar__group').forEach(group => {
+                const header = group.querySelector('.sidebar__group-header');
+                if (header) {
+                    const onclick = header.getAttribute('onclick') || '';
+                    const match = onclick.match(/toggleGroup\([^,]+,\s*'([^']+)'/);
+                    if (match) {
+                        const groupName = match[1];
+                        if (state.groups.hasOwnProperty(groupName)) {
+                            if (state.groups[groupName]) {
+                                group.classList.add('open');
+                            } else {
+                                group.classList.remove('open');
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Restore scroll position immediately
+        if (nav && state.scrollY) {
+            nav.scrollTop = state.scrollY;
+        }
+        
+        // Save scroll position on scroll (debounced)
+        if (nav) {
+            let scrollTimeout;
+            nav.addEventListener('scroll', function() {
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(function() {
+                    const currentState = getState();
+                    currentState.scrollY = nav.scrollTop;
+                    saveState(currentState);
+                }, 50);
+            });
+        }
     })();
 </script>
 

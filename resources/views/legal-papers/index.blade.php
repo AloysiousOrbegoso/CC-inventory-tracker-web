@@ -47,9 +47,17 @@
 
 <div class="summary-table-wrap">
     @if ($documents->isEmpty())
-        <div class="empty-state-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            <span class="empty-state-text">No legal documents uploaded yet.</span>
+        <div class="empty-state-icon" style="padding:32px 20px">
+            <div style="font-size:32px;margin-bottom:8px">📑</div>
+            <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">No legal documents yet</div>
+            <div style="font-size:12px;color:var(--text-2);margin-bottom:12px">Upload permits, licenses, and certificates to keep them organized and track expiry dates.</div>
+            <div style="padding:10px 14px;background:var(--bg);border-radius:8px;text-align:left;font-size:11px;color:var(--text-2);max-width:260px;margin:0 auto">
+                <div style="font-weight:600;color:var(--text);margin-bottom:4px">📄 Document types:</div>
+                <div style="margin-bottom:3px">• Business Permits</div>
+                <div style="margin-bottom:3px">• BIR Registration (COR)</div>
+                <div style="margin-bottom:3px">• DTI / SEC Certificates</div>
+                <div>• Insurance Policies</div>
+            </div>
         </div>
     @else
         <table class="summary-table">
