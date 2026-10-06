@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Concerns\AuthorizesBranchAccess;
 use App\Models\AppSetting;
 use App\Models\Branch;
 use App\Models\Payment;
@@ -12,7 +11,6 @@ use Illuminate\View\View;
 
 class PaymentsController extends Controller
 {
-    use AuthorizesBranchAccess;
 
     /** Seed value for the owner-editable list kept in AppSetting('payment_categories'). */
     public const DEFAULT_CATEGORIES = [
@@ -99,13 +97,7 @@ class PaymentsController extends Controller
 
     public function update(Request $request, Payment $payment): JsonResponse
     {
-        $user = auth()->user();
-        if (! $user->isManager() && ! $user->isSuperAdmin()) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
-        if (! $user->isSuperAdmin()) {
-            $this->authorizeBranch($payment->branch_id);
-        }
+        $this->authorize('manage', $payment);
 
         $validated = $request->validate([
             'category' => ['required', 'in:'.implode(',', self::categories())],
@@ -130,13 +122,7 @@ class PaymentsController extends Controller
 
     public function markPaid(Payment $payment): JsonResponse
     {
-        $user = auth()->user();
-        if (! $user->isManager() && ! $user->isSuperAdmin()) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
-        if (! $user->isSuperAdmin()) {
-            $this->authorizeBranch($payment->branch_id);
-        }
+        $this->authorize('manage', $payment);
 
         $payment->update(['status' => 'paid', 'paid_at' => now()]);
 
@@ -145,13 +131,7 @@ class PaymentsController extends Controller
 
     public function destroy(Payment $payment): JsonResponse
     {
-        $user = auth()->user();
-        if (! $user->isManager() && ! $user->isSuperAdmin()) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
-        if (! $user->isSuperAdmin()) {
-            $this->authorizeBranch($payment->branch_id);
-        }
+        $this->authorize('manage', $payment);
 
         $payment->delete();
 

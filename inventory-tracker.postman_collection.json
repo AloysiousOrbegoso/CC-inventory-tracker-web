@@ -1,70 +1,28 @@
 {
   "info": {
     "name": "Multi-Branch Inventory Tracker API",
-    "description": "Complete endpoint collection for the Multi-Branch Inventory Tracker backend (Laravel + JWT + 3-tier RBAC: super_admin / manager / staff). Run the two Login requests first — they auto-save the JWT into {{admin_token}} / {{staff_token}} via a test script, so every other request just works.",
+    "description": "Complete endpoint collection for the Multi-Branch Inventory Tracker backend (Laravel + JWT + 3-tier RBAC: super_admin / manager / staff).\n\nRun the two Login requests first — they auto-save the JWT into {{admin_token}} / {{staff_token}} via a test script, so every other request just works.\n\n═══════════════ SEEDED ACCOUNTS ═══════════════\n\nSUPER ADMIN\nAccount: admin@inventory.ph\nPassword: 123456789\n\nAccount: owner@inventory.test\nPassword: 123456789   ← used by Admin Login below\n\nMANAGER (all passwords: 123456789)\nAccount: manager@inventory.test  (Branch QC — canonical demo)\nAccount: juan.cruz@nita.com  (QC)\nAccount: maria.santos.mgr@nita.com  (QC)\nAccount: pedro.reyes@nita.com  (Makati)\nAccount: ana.gonzales@nita.com  (Makati)\nAccount: jose.mercado@nita.com  (BGC)\nAccount: luisa.fernandez@nita.com  (BGC)\nAccount: carlos.ramos@nita.com  (Cebu)\nAccount: elena.torres@nita.com  (Davao)\nAccount: miguel.villanueva@nita.com  (Davao)\nAccount: sofia.lim@nita.com  (Clark)\n\nSTAFF (PIN + branch_id login — PIN: 123456789)\nStaff Juan (PIN-only, Branch QC)\nmaria.santos@nita.com (QC) · juan.delacruz@nita.com (QC) · ana.reyes@nita.com (Makati) · pedro.gonzales@nita.com (Makati) · luisa.tan@nita.com (BGC)\n\nTEST\nAccount: juan@test.com\nPassword: password  (PIN 1234, staff, Main Branch)\n\nBRANCHES (seed order): 1=QC · 2=Makati · 3=BGC · 4=Cebu · 5=Davao · 6=Clark\n\n═══════════════ ROLES ═══════════════\n• super_admin — everything, all branches.\n• manager — same toolset, scoped to own branch_id.\n• staff — PIN login; POS transactions, receipt scans, shift open/close only.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    {
-      "key": "base_url",
-      "value": "http://127.0.0.1:8000/api"
-    },
-    {
-      "key": "admin_token",
-      "value": ""
-    },
-    {
-      "key": "staff_token",
-      "value": ""
-    },
-    {
-      "key": "branch_id",
-      "value": "1"
-    },
-    {
-      "key": "other_branch_id",
-      "value": "2"
-    },
-    {
-      "key": "product_id",
-      "value": "1"
-    },
-    {
-      "key": "ingredient_id",
-      "value": "1"
-    },
-    {
-      "key": "recipe_id",
-      "value": "1"
-    },
-    {
-      "key": "staff_id",
-      "value": "3"
-    },
-    {
-      "key": "shift_log_id",
-      "value": "1"
-    },
-    {
-      "key": "alert_id",
-      "value": "1"
-    },
-    {
-      "key": "notification_id",
-      "value": "1"
-    },
-    {
-      "key": "transaction_id",
-      "value": "1"
-    },
-    {
-      "key": "receipt_id",
-      "value": "1"
-    },
-    {
-      "key": "branch_stock_id",
-      "value": "1"
-    }
+    { "key": "base_url", "value": "http://127.0.0.1:8000/api" },
+    { "key": "admin_token", "value": "" },
+    { "key": "staff_token", "value": "" },
+    { "key": "branch_id", "value": "1" },
+    { "key": "other_branch_id", "value": "2" },
+    { "key": "product_id", "value": "1" },
+    { "key": "ingredient_id", "value": "1" },
+    { "key": "recipe_id", "value": "1" },
+    { "key": "staff_id", "value": "3" },
+    { "key": "shift_log_id", "value": "1" },
+    { "key": "alert_id", "value": "1" },
+    { "key": "notification_id", "value": "1" },
+    { "key": "transaction_id", "value": "1" },
+    { "key": "receipt_id", "value": "1" },
+    { "key": "branch_stock_id", "value": "1" },
+    { "key": "payment_id", "value": "1" },
+    { "key": "supplier_id", "value": "1" },
+    { "key": "meeting_id", "value": "1" }
   ],
   "item": [
     {
@@ -89,10 +47,7 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -100,15 +55,29 @@
             },
             "url": {
               "raw": "{{base_url}}/auth/admin-login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "admin-login"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["auth", "admin-login"]
             },
-            "description": "Also works for a manager account, e.g. manager@inventory.test / 123456789."
+            "description": "Email + password login for super admins and managers. Swap in manager@inventory.test / 123456789 to log in as a manager. Returns { token, user }."
+          }
+        },
+        {
+          "name": "Owner Login (legacy alias)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"owner@inventory.test\",\n  \"password\": \"123456789\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/owner-login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "owner-login"]
+            },
+            "description": "Backwards-compatible alias of Admin Login for older clients — identical body and response."
           }
         },
         {
@@ -129,10 +98,7 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -140,14 +106,29 @@
             },
             "url": {
               "raw": "{{base_url}}/auth/staff-login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "staff-login"
-              ]
-            }
+              "host": ["{{base_url}}"],
+              "path": ["auth", "staff-login"]
+            },
+            "description": "PIN + branch login for on-site roles (staff, and managers covering a POS shift). Matches the first staff/manager user in that branch whose PIN checks out — with seed data, PIN 123456789 in branch 1 resolves to Staff Juan. Returns { token, user, branch }."
+          }
+        },
+        {
+          "name": "Unified Login (alias of staff login)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pin\": \"123456789\",\n  \"branch_id\": {{branch_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": ["{{base_url}}"],
+              "path": ["login"]
+            },
+            "description": "Unified /api/login — delegates to the same handler as Staff Login."
           }
         },
         {
@@ -155,21 +136,14 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/auth/me",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "me"
-              ]
-            }
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Authenticated user with branch. /me is a legacy alias."
           }
         },
         {
@@ -177,21 +151,89 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/auth/logout",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "logout"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
             }
+          }
+        },
+        {
+          "name": "Register Step 1 (personal info)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"New Owner\",\n  \"email\": \"new.owner@example.com\",\n  \"contact_number\": \"+63 917 000 0000\",\n  \"role\": \"owner\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register/step-1",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register", "step-1"]
+            },
+            "description": "Public. Creates a pending user (temp password) and returns user_id for the next steps. role: owner → super_admin, manager → manager."
+          }
+        },
+        {
+          "name": "Register Step 2 (owner — create branches)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 1,\n  \"businesses\": [\n    { \"business_name\": \"My Milk Tea Shop\", \"type_of_business\": \"Food & Beverage\", \"business_registration\": \"reg-123\", \"business_permit\": \"permit-456\", \"location\": \"Quezon City\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register/step-2",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register", "step-2"]
+            },
+            "description": "Public. Array format creates one branch per entry. A flat { user_id, business_name, location } format (web form) is also accepted."
+          }
+        },
+        {
+          "name": "Register Step 2 (manager — create branch)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 1,\n  \"business_name\": \"Branch QC\",\n  \"branch_location\": \"Quezon City\",\n  \"business_owner\": \"Owner Admin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register/manager/step-2",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register", "manager", "step-2"]
+            },
+            "description": "Public. Creates the manager's branch and assigns the manager to it."
+          }
+        },
+        {
+          "name": "Register Confirm (finalize onboarding)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 1,\n  \"permit_validity\": true,\n  \"terms_accepted\": true,\n  \"legal_papers_submitted\": true,\n  \"legal_papers_secondary_submitted\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register/confirm",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register", "confirm"]
+            },
+            "description": "Public. Accepts user_id or email. Returns onboarding tracker statuses."
           }
         }
       ]
@@ -204,26 +246,17 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/staff?branch_id={{branch_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "staff"
-              ],
+              "host": ["{{base_url}}"],
+              "path": ["staff"],
               "query": [
-                {
-                  "key": "branch_id",
-                  "value": "{{branch_id}}"
-                }
+                { "key": "branch_id", "value": "{{branch_id}}" }
               ]
-            }
+            },
+            "description": "branch_id is optional for super admins (omit it to list all branches); managers must pass their own branch_id or get 403."
           }
         },
         {
@@ -231,27 +264,32 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"New Staff Member\",\n  \"pin\": \"5678\",\n  \"branch_id\": {{branch_id}}\n}"
+              "raw": "{\n  \"name\": \"New Staff Member\",\n  \"email\": \"new.staff@nita.com\",\n  \"pin\": \"5678\",\n  \"role\": \"staff\",\n  \"branch_id\": {{branch_id}}\n}"
             },
             "url": {
               "raw": "{{base_url}}/staff",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "staff"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["staff"]
+            },
+            "description": "pin is required, 4–8 characters. role: staff (default) or manager. email is optional but must be unique."
+          }
+        },
+        {
+          "name": "Show Staff",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/staff/{{staff_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["staff", "{{staff_id}}"]
             }
           }
         },
@@ -260,14 +298,8 @@
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -275,13 +307,8 @@
             },
             "url": {
               "raw": "{{base_url}}/staff/{{staff_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "staff",
-                "{{staff_id}}"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["staff", "{{staff_id}}"]
             }
           }
         },
@@ -290,41 +317,27 @@
           "request": {
             "method": "DELETE",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/staff/{{staff_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "staff",
-                "{{staff_id}}"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["staff", "{{staff_id}}"]
             }
           }
         }
       ]
     },
     {
-      "name": "Shifts",
+      "name": "Shifts (POS stock counts)",
       "item": [
         {
           "name": "Open Shift (staff, manager)",
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{staff_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Authorization", "value": "Bearer {{staff_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -332,14 +345,10 @@
             },
             "url": {
               "raw": "{{base_url}}/shifts/open",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "shifts",
-                "open"
-              ]
-            }
+              "host": ["{{base_url}}"],
+              "path": ["shifts", "open"]
+            },
+            "description": "Branch is inferred from the authenticated user. 422 if the user already has an open shift."
           }
         },
         {
@@ -347,14 +356,8 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{staff_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Authorization", "value": "Bearer {{staff_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -362,14 +365,10 @@
             },
             "url": {
               "raw": "{{base_url}}/shifts/close",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "shifts",
-                "close"
-              ]
-            }
+              "host": ["{{base_url}}"],
+              "path": ["shifts", "close"]
+            },
+            "description": "Runs variance detection — negative variances raise DiscrepancyAlerts and correct branch stock."
           }
         },
         {
@@ -377,26 +376,17 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/shifts?branch_id={{branch_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "shifts"
-              ],
+              "host": ["{{base_url}}"],
+              "path": ["shifts"],
               "query": [
-                {
-                  "key": "branch_id",
-                  "value": "{{branch_id}}"
-                }
+                { "key": "branch_id", "value": "{{branch_id}}" }
               ]
-            }
+            },
+            "description": "branch_id is required. Paginated (20/page)."
           }
         },
         {
@@ -404,21 +394,58 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/shifts/{{shift_log_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "shifts",
-                "{{shift_log_id}}"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["shifts", "{{shift_log_id}}"]
             }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Shift Logs (thin start/end aliases — staff, manager)",
+      "item": [
+        {
+          "name": "Start Shift Log",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{staff_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branch_id\": {{branch_id}},\n  \"time_in\": \"2026-10-06T09:00:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/shift-logs/start",
+              "host": ["{{base_url}}"],
+              "path": ["shift-logs", "start"]
+            },
+            "description": "Thin alias over shift_logs — no per-ingredient counts. time_in is optional (defaults to now)."
+          }
+        },
+        {
+          "name": "End Shift Log",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{staff_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"time_out\": \"2026-10-06T17:00:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/shift-logs/{{shift_log_id}}/end",
+              "host": ["{{base_url}}"],
+              "path": ["shift-logs", "{{shift_log_id}}", "end"]
+            },
+            "description": "409 if already closed. If the shift was opened via /shifts/open (counts pending), this refuses and routes you to /shifts/close so variance detection is not skipped."
           }
         }
       ]
@@ -431,29 +458,15 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/reports/sales?branch_id={{branch_id}}&period=daily",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "reports",
-                "sales"
-              ],
+              "host": ["{{base_url}}"],
+              "path": ["reports", "sales"],
               "query": [
-                {
-                  "key": "branch_id",
-                  "value": "{{branch_id}}"
-                },
-                {
-                  "key": "period",
-                  "value": "daily"
-                }
+                { "key": "branch_id", "value": "{{branch_id}}" },
+                { "key": "period", "value": "daily" }
               ]
             }
           }
@@ -463,25 +476,14 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/reports/inventory?branch_id={{branch_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "reports",
-                "inventory"
-              ],
+              "host": ["{{base_url}}"],
+              "path": ["reports", "inventory"],
               "query": [
-                {
-                  "key": "branch_id",
-                  "value": "{{branch_id}}"
-                }
+                { "key": "branch_id", "value": "{{branch_id}}" }
               ]
             }
           }
@@ -496,24 +498,14 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/alerts?branch_id={{branch_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "alerts"
-              ],
+              "host": ["{{base_url}}"],
+              "path": ["alerts"],
               "query": [
-                {
-                  "key": "branch_id",
-                  "value": "{{branch_id}}"
-                }
+                { "key": "branch_id", "value": "{{branch_id}}" }
               ]
             }
           }
@@ -523,20 +515,31 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/alerts/{{alert_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "alerts",
-                "{{alert_id}}"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["alerts", "{{alert_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Alert (generic PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"resolved\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/alerts/{{alert_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["alerts", "{{alert_id}}"]
             }
           }
         },
@@ -545,21 +548,12 @@
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/alerts/{{alert_id}}/review",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "alerts",
-                "{{alert_id}}",
-                "review"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["alerts", "{{alert_id}}", "review"]
             }
           }
         },
@@ -568,21 +562,12 @@
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/alerts/{{alert_id}}/dismiss",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "alerts",
-                "{{alert_id}}",
-                "dismiss"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["alerts", "{{alert_id}}", "dismiss"]
             }
           }
         }
@@ -596,19 +581,12 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/notifications",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "notifications"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["notifications"]
             }
           }
         },
@@ -617,21 +595,12 @@
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/notifications/{{notification_id}}/read",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "notifications",
-                "{{notification_id}}",
-                "read"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["notifications", "{{notification_id}}", "read"]
             }
           }
         }
@@ -645,19 +614,12 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/products",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "products"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["products"]
             }
           }
         },
@@ -666,36 +628,22 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/products/{{product_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "products",
-                "{{product_id}}"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["products", "{{product_id}}"]
             }
           }
         },
         {
-          "name": "Create Product",
+          "name": "Create Product (super_admin)",
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -703,28 +651,18 @@
             },
             "url": {
               "raw": "{{base_url}}/products",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "products"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["products"]
             }
           }
         },
         {
-          "name": "Update Product",
+          "name": "Update Product (super_admin)",
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -732,35 +670,22 @@
             },
             "url": {
               "raw": "{{base_url}}/products/{{product_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "products",
-                "{{product_id}}"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["products", "{{product_id}}"]
             }
           }
         },
         {
-          "name": "Delete Product",
+          "name": "Delete Product (super_admin)",
           "request": {
             "method": "DELETE",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/products/{{product_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "products",
-                "{{product_id}}"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["products", "{{product_id}}"]
             }
           }
         }
@@ -774,19 +699,12 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/ingredients",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "ingredients"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["ingredients"]
             }
           }
         },
@@ -795,36 +713,22 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/ingredients/{{ingredient_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "ingredients",
-                "{{ingredient_id}}"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["ingredients", "{{ingredient_id}}"]
             }
           }
         },
         {
-          "name": "Create Ingredient",
+          "name": "Create Ingredient (super_admin)",
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -832,28 +736,18 @@
             },
             "url": {
               "raw": "{{base_url}}/ingredients",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "ingredients"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["ingredients"]
             }
           }
         },
         {
-          "name": "Update Ingredient",
+          "name": "Update Ingredient (super_admin)",
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -861,35 +755,22 @@
             },
             "url": {
               "raw": "{{base_url}}/ingredients/{{ingredient_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "ingredients",
-                "{{ingredient_id}}"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["ingredients", "{{ingredient_id}}"]
             }
           }
         },
         {
-          "name": "Delete Ingredient",
+          "name": "Delete Ingredient (super_admin)",
           "request": {
             "method": "DELETE",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/ingredients/{{ingredient_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "ingredients",
-                "{{ingredient_id}}"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["ingredients", "{{ingredient_id}}"]
             }
           }
         }
@@ -903,24 +784,14 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/recipes?product_id={{product_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "recipes"
-              ],
+              "host": ["{{base_url}}"],
+              "path": ["recipes"],
               "query": [
-                {
-                  "key": "product_id",
-                  "value": "{{product_id}}"
-                }
+                { "key": "product_id", "value": "{{product_id}}" }
               ]
             }
           }
@@ -930,65 +801,42 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/recipes/{{recipe_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "recipes",
-                "{{recipe_id}}"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["recipes", "{{recipe_id}}"]
             }
           }
         },
         {
-          "name": "Create Recipe (assign ingredient to product)",
+          "name": "Create Recipe (assign ingredient to product) (super_admin)",
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"product_id\": {{product_id}},\n  \"ingredient_id\": {{ingredient_id}},\n  \"quantity_required\": 30\n}"
+              "raw": "{\n  \"product_id\": {{product_id}},\n  \"ingredient_id\": {{ingredient_id}},\n  \"size\": \"regular\",\n  \"quantity_required\": 30\n}"
             },
             "url": {
               "raw": "{{base_url}}/recipes",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "recipes"
-              ]
-            }
+              "host": ["{{base_url}}"],
+              "path": ["recipes"]
+            },
+            "description": "size: regular (default) or large — recipes are configured per product size."
           }
         },
         {
-          "name": "Update Recipe Quantity",
+          "name": "Update Recipe Quantity (super_admin)",
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -996,35 +844,22 @@
             },
             "url": {
               "raw": "{{base_url}}/recipes/{{recipe_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "recipes",
-                "{{recipe_id}}"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["recipes", "{{recipe_id}}"]
             }
           }
         },
         {
-          "name": "Delete Recipe",
+          "name": "Delete Recipe (super_admin)",
           "request": {
             "method": "DELETE",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/recipes/{{recipe_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "recipes",
-                "{{recipe_id}}"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["recipes", "{{recipe_id}}"]
             }
           }
         }
@@ -1038,19 +873,12 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/branches",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "branches"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["branches"]
             }
           }
         },
@@ -1059,20 +887,12 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/branches/{{branch_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "branches",
-                "{{branch_id}}"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["branches", "{{branch_id}}"]
             }
           }
         },
@@ -1081,14 +901,8 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -1096,12 +910,8 @@
             },
             "url": {
               "raw": "{{base_url}}/branches",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "branches"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["branches"]
             }
           }
         },
@@ -1110,14 +920,8 @@
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -1125,13 +929,8 @@
             },
             "url": {
               "raw": "{{base_url}}/branches/{{branch_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "branches",
-                "{{branch_id}}"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["branches", "{{branch_id}}"]
             }
           }
         },
@@ -1140,20 +939,12 @@
           "request": {
             "method": "DELETE",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/branches/{{branch_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "branches",
-                "{{branch_id}}"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["branches", "{{branch_id}}"]
             }
           }
         }
@@ -1167,21 +958,12 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/branches/{{branch_id}}/stock",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "branches",
-                "{{branch_id}}",
-                "stock"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["branches", "{{branch_id}}", "stock"]
             }
           }
         },
@@ -1190,14 +972,8 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -1205,13 +981,10 @@
             },
             "url": {
               "raw": "{{base_url}}/stock",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "stock"
-              ]
-            }
+              "host": ["{{base_url}}"],
+              "path": ["stock"]
+            },
+            "description": "One row per branch+ingredient (unique). Optionally pass capacity instead of min_threshold — the threshold is then derived from the configurable low-stock percentage (default 25%)."
           }
         },
         {
@@ -1219,14 +992,8 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -1234,15 +1001,45 @@
             },
             "url": {
               "raw": "{{base_url}}/stock/restock",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "stock",
-                "restock"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["stock", "restock"]
             },
             "description": "Additive — adds 'quantity' to whatever is already on hand and logs a 'restock' stock movement."
+          }
+        },
+        {
+          "name": "Update Stock Config (threshold / capacity)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"min_threshold\": 150,\n  \"capacity\": 600\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/stock/{{branch_stock_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["stock", "{{branch_stock_id}}"]
+            },
+            "description": "Edits configuration only — on-hand quantity changes go through restock or a shift close, so no StockMovement is written here. 422 if the body is empty."
+          }
+        },
+        {
+          "name": "Delete Stock Entry",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/stock/{{branch_stock_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["stock", "{{branch_stock_id}}"]
+            },
+            "description": "Removes the branch+ingredient stock row; movement history is kept for audit."
           }
         },
         {
@@ -1250,23 +1047,14 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/stock/{{branch_stock_id}}/movements",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "stock",
-                "{{branch_stock_id}}",
-                "movements"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["stock", "{{branch_stock_id}}", "movements"]
             },
-            "description": "{{branch_stock_id}} is a branch_stock row id (the id field from 'Branch Stock Levels' or 'Create Initial Stock Entry' responses) — a full audit trail of every sale, restock, and shift correction for that branch+ingredient."
+            "description": "{{branch_stock_id}} is a branch_stock row id (the id field from 'Branch Stock Levels' or 'Create Initial Stock Entry' responses) — a full audit trail of every sale, restock, and shift correction for that branch+ingredient. Paginated."
           }
         },
         {
@@ -1274,25 +1062,14 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/stock/low-stock?branch_id={{branch_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "stock",
-                "low-stock"
-              ],
+              "host": ["{{base_url}}"],
+              "path": ["stock", "low-stock"],
               "query": [
-                {
-                  "key": "branch_id",
-                  "value": "{{branch_id}}"
-                }
+                { "key": "branch_id", "value": "{{branch_id}}" }
               ]
             },
             "description": "Returns every branch_stock row currently at or below its min_threshold."
@@ -1308,14 +1085,8 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{staff_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Authorization", "value": "Bearer {{staff_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -1323,12 +1094,8 @@
             },
             "url": {
               "raw": "{{base_url}}/transactions",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "transactions"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["transactions"]
             },
             "description": "{{$guid}} is Postman's built-in dynamic variable — generates a fresh UUID each send, since client_uuid must be unique per transaction."
           }
@@ -1338,24 +1105,14 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/transactions?branch_id={{branch_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "transactions"
-              ],
+              "host": ["{{base_url}}"],
+              "path": ["transactions"],
               "query": [
-                {
-                  "key": "branch_id",
-                  "value": "{{branch_id}}"
-                }
+                { "key": "branch_id", "value": "{{branch_id}}" }
               ]
             }
           }
@@ -1365,20 +1122,12 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/transactions/{{transaction_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "transactions",
-                "{{transaction_id}}"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["transactions", "{{transaction_id}}"]
             }
           }
         }
@@ -1392,10 +1141,7 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{staff_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{staff_token}}" }
             ],
             "body": {
               "mode": "formdata",
@@ -1414,13 +1160,8 @@
             },
             "url": {
               "raw": "{{base_url}}/receipts/scan",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "receipts",
-                "scan"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["receipts", "scan"]
             },
             "description": "Attach a receipt image file in the 'image' form field before sending."
           }
@@ -1430,24 +1171,14 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/receipts?branch_id={{branch_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "receipts"
-              ],
+              "host": ["{{base_url}}"],
+              "path": ["receipts"],
               "query": [
-                {
-                  "key": "branch_id",
-                  "value": "{{branch_id}}"
-                }
+                { "key": "branch_id", "value": "{{branch_id}}" }
               ]
             }
           }
@@ -1457,25 +1188,14 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/receipts/summary?branch_id={{branch_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "receipts",
-                "summary"
-              ],
+              "host": ["{{base_url}}"],
+              "path": ["receipts", "summary"],
               "query": [
-                {
-                  "key": "branch_id",
-                  "value": "{{branch_id}}"
-                }
+                { "key": "branch_id", "value": "{{branch_id}}" }
               ]
             }
           }
@@ -1485,21 +1205,493 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/receipts/{{receipt_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "receipts",
-                "{{receipt_id}}"
+              "host": ["{{base_url}}"],
+              "path": ["receipts", "{{receipt_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Meetings (manager, super_admin)",
+      "item": [
+        {
+          "name": "List Meetings",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/meetings?start_date=2026-10-01&end_date=2026-10-31&type=meeting",
+              "host": ["{{base_url}}"],
+              "path": ["meetings"],
+              "query": [
+                { "key": "start_date", "value": "2026-10-01" },
+                { "key": "end_date", "value": "2026-10-31" },
+                { "key": "type", "value": "meeting" }
+              ]
+            },
+            "description": "Managers are auto-scoped to their branch. Optional filters: start_date+end_date, type (meeting|task|event)."
+          }
+        },
+        {
+          "name": "Create Meeting",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Weekly Ops Sync\",\n  \"description\": \"Stock and sales review\",\n  \"date\": \"2026-10-10\",\n  \"start_time\": \"10:00\",\n  \"end_time\": \"11:00\",\n  \"meeting_type\": \"meeting\",\n  \"location\": \"Branch QC\",\n  \"branch_id\": {{branch_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/meetings",
+              "host": ["{{base_url}}"],
+              "path": ["meetings"]
+            },
+            "description": "Managers' branch_id is forced to their own branch. Optional attendee_ids: [user ids]."
+          }
+        },
+        {
+          "name": "This Week's Meetings",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/meetings/week",
+              "host": ["{{base_url}}"],
+              "path": ["meetings", "week"]
+            }
+          }
+        },
+        {
+          "name": "Upcoming Meetings",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/meetings/upcoming",
+              "host": ["{{base_url}}"],
+              "path": ["meetings", "upcoming"]
+            }
+          }
+        },
+        {
+          "name": "Show Meeting",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/meetings/{{meeting_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["meetings", "{{meeting_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Meeting",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Weekly Ops Sync (moved)\",\n  \"date\": \"2026-10-12\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/meetings/{{meeting_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["meetings", "{{meeting_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Meeting",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/meetings/{{meeting_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["meetings", "{{meeting_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Suppliers (manager, super_admin)",
+      "item": [
+        {
+          "name": "List Suppliers",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/suppliers",
+              "host": ["{{base_url}}"],
+              "path": ["suppliers"]
+            },
+            "description": "Suppliers are company-wide (no branch scoping)."
+          }
+        },
+        {
+          "name": "Create Supplier",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Taro Farms Co.\",\n  \"contact_person\": \"Ana Reyes\",\n  \"contact_number\": \"+63 917 555 6666\",\n  \"address\": \"789 Paseo de Roxas, Makati City\",\n  \"notes\": \"Delivers every Monday\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/suppliers",
+              "host": ["{{base_url}}"],
+              "path": ["suppliers"]
+            },
+            "description": "Optional multipart 'photo' field uploads a supplier photo."
+          }
+        },
+        {
+          "name": "Show Supplier",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/suppliers/{{supplier_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["suppliers", "{{supplier_id}}"]
+            },
+            "description": "Includes linked ingredients (with unit costs) and the 20 most recent purchases."
+          }
+        },
+        {
+          "name": "Update Supplier",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Taro Farms Co.\",\n  \"contact_number\": \"+63 918 555 6666\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/suppliers/{{supplier_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["suppliers", "{{supplier_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Supplier",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/suppliers/{{supplier_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["suppliers", "{{supplier_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Link Ingredient to Supplier",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ingredient_id\": {{ingredient_id}},\n  \"unit_cost\": 12.5,\n  \"is_primary\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/suppliers/{{supplier_id}}/ingredients",
+              "host": ["{{base_url}}"],
+              "path": ["suppliers", "{{supplier_id}}", "ingredients"]
+            },
+            "description": "is_primary=true clears the primary flag from other suppliers of that ingredient. The pricing simulator reads unit_cost from the primary supplier."
+          }
+        },
+        {
+          "name": "Unlink Ingredient from Supplier",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/suppliers/{{supplier_id}}/ingredients/{{ingredient_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["suppliers", "{{supplier_id}}", "ingredients", "{{ingredient_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Record Purchase",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ingredient_id\": {{ingredient_id}},\n  \"unit_price\": 12.5,\n  \"quantity\": 2000,\n  \"purchased_at\": \"2026-10-06\",\n  \"notes\": \"Weekly delivery\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/suppliers/{{supplier_id}}/purchases",
+              "host": ["{{base_url}}"],
+              "path": ["suppliers", "{{supplier_id}}", "purchases"]
+            },
+            "description": "Logs a PurchaseHistory row and updates the supplier's unit_cost for that ingredient."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments (manager, super_admin)",
+      "item": [
+        {
+          "name": "List Payments",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments?branch_id={{branch_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["payments"],
+              "query": [
+                { "key": "branch_id", "value": "{{branch_id}}" }
+              ]
+            },
+            "description": "branch_id is required. Returns the payments list plus pending/paid/overdue totals."
+          }
+        },
+        {
+          "name": "Record Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branch_id\": {{branch_id}},\n  \"category\": \"rent\",\n  \"payee\": \"QC Landlord Corp.\",\n  \"amount\": 25000,\n  \"method\": \"bank_transfer\",\n  \"status\": \"pending\",\n  \"due_date\": \"2026-11-05\",\n  \"notes\": \"Monthly rent\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/payments",
+              "host": ["{{base_url}}"],
+              "path": ["payments"]
+            },
+            "description": "category: one of the owner-managed list (defaults: rent, utilities, supplier, salary, maintenance, packaging, utensils, gas, wages, other). method: cash | bank_transfer | gcash | check | other. status: pending | paid | overdue. Optional multipart 'receipt' image (max 5MB)."
+          }
+        },
+        {
+          "name": "Update Payment",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"rent\",\n  \"payee\": \"QC Landlord Corp.\",\n  \"amount\": 25000,\n  \"method\": \"bank_transfer\",\n  \"status\": \"paid\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/payments/{{payment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "{{payment_id}}"]
+            },
+            "description": "Setting status to paid stamps paid_at; any other status clears it."
+          }
+        },
+        {
+          "name": "Mark Payment as Paid",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/{{payment_id}}/mark-paid",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "{{payment_id}}", "mark-paid"]
+            }
+          }
+        },
+        {
+          "name": "Delete Payment",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/{{payment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "{{payment_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard Analytics (manager, super_admin)",
+      "item": [
+        {
+          "name": "Daily KPIs",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/kpis?date=2026-10-06&branch_id={{branch_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "kpis"],
+              "query": [
+                { "key": "date", "value": "2026-10-06" },
+                { "key": "branch_id", "value": "{{branch_id}}" }
+              ]
+            },
+            "description": "total_sales, total_revenue, flagged_shifts, open_alerts for the day. Omit branch_id for all branches; managers are scoped to their own."
+          }
+        },
+        {
+          "name": "Sales Summary (date range)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/sales-summary?from=2026-09-29&to=2026-10-06&branch_id={{branch_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "sales-summary"],
+              "query": [
+                { "key": "from", "value": "2026-09-29" },
+                { "key": "to", "value": "2026-10-06" },
+                { "key": "branch_id", "value": "{{branch_id}}" }
+              ]
+            },
+            "description": "Daily sales count + revenue between from/to (defaults: current week)."
+          }
+        },
+        {
+          "name": "Top Products",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/top-products?date=2026-10-06&limit=5&branch_id={{branch_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "top-products"],
+              "query": [
+                { "key": "date", "value": "2026-10-06" },
+                { "key": "limit", "value": "5" },
+                { "key": "branch_id", "value": "{{branch_id}}" }
               ]
             }
+          }
+        },
+        {
+          "name": "Revenue Trends (year-over-year)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/trends?year=2026&branch_id={{branch_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "trends"],
+              "query": [
+                { "key": "year", "value": "2026" },
+                { "key": "branch_id", "value": "{{branch_id}}" }
+              ]
+            },
+            "description": "12-month revenue series for the given year and the prior year."
+          }
+        },
+        {
+          "name": "Stock Leakage",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/leakage?from=2026-10-01&to=2026-10-06&branch_id={{branch_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "leakage"],
+              "query": [
+                { "key": "from", "value": "2026-10-01" },
+                { "key": "to", "value": "2026-10-06" },
+                { "key": "branch_id", "value": "{{branch_id}}" }
+              ]
+            },
+            "description": "Negative stock variance over the range (defaults: month-to-date), as a total and broken down per branch, sorted best-to-worst."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pricing Simulator (manager, super_admin)",
+      "item": [
+        {
+          "name": "Simulate Price Adjustments",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"adjustments\": [\n    { \"ingredient_id\": {{ingredient_id}}, \"new_unit_cost\": 15 }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/pricing/simulate",
+              "host": ["{{base_url}}"],
+              "path": ["pricing", "simulate"]
+            },
+            "description": "What-if margin calculation — recomputes every active product's cost and margin with hypothetical ingredient prices. Nothing is persisted."
           }
         }
       ]
@@ -1512,20 +1704,14 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/dashboard",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "dashboard"
-              ]
-            }
+              "host": ["{{base_url}}"],
+              "path": ["dashboard"]
+            },
+            "description": "Global overview — super_admin only. The analytics endpoints above (/dashboard/kpis etc.) are the manager-accessible ones."
           }
         }
       ]

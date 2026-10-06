@@ -487,6 +487,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/settings/payment-categories', [SettingsController::class, 'addPaymentCategory'])->name('settings.payment-categories.store');
     Route::delete('/settings/payment-categories/{category}', [SettingsController::class, 'removePaymentCategory'])->name('settings.payment-categories.destroy');
 
+    // ── First-Run Setup Wizard ─────────────────────────────────────
+    Route::get('/setup', [\App\Http\Controllers\SetupController::class, 'index'])->name('setup.index');
+    Route::post('/setup/ingredients', [\App\Http\Controllers\SetupController::class, 'storeIngredient'])->name('setup.ingredients.store');
+    Route::post('/setup/products', [\App\Http\Controllers\SetupController::class, 'storeProduct'])->name('setup.products.store');
+    Route::post('/setup/stock', [\App\Http\Controllers\SetupController::class, 'storeStock'])->name('setup.stock.store');
+    Route::post('/setup/skip', [\App\Http\Controllers\SetupController::class, 'skip'])->name('setup.skip');
+    Route::get('/setup/status', [\App\Http\Controllers\SetupController::class, 'status'])->name('setup.status');
+
     // ── Profit & Loss ──────────────────────────────────────────────
     Route::get('/profit-loss', [ProfitLossController::class, 'index'])->name('profit-loss');
 

@@ -18,13 +18,7 @@ class AttendanceController extends Controller
             return response()->json(['message' => 'Worker not found.'], 404);
         }
 
-        $authUser = $request->user();
-        if (! $authUser->isSuperAdmin() && ! $authUser->isManager()) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
-        if ($authUser->isManager() && $authUser->branch_id !== $user->branch_id) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
+        $this->authorize('manageWorker', $user);
 
         // Check for existing open shift
         $openShift = ShiftLog::where('user_id', $user->id)
@@ -60,13 +54,7 @@ class AttendanceController extends Controller
             return response()->json(['message' => 'Worker not found.'], 404);
         }
 
-        $authUser = $request->user();
-        if (! $authUser->isSuperAdmin() && ! $authUser->isManager()) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
-        if ($authUser->isManager() && $authUser->branch_id !== $user->branch_id) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
+        $this->authorize('manageWorker', $user);
 
         $openShift = ShiftLog::where('user_id', $user->id)
             ->where('status', 'open')
@@ -96,6 +84,11 @@ class AttendanceController extends Controller
         if (! in_array($user->role, [User::ROLE_STAFF, User::ROLE_MANAGER])) {
             return response()->json(['message' => 'Worker not found.'], 404);
         }
+
+        // Gap fix: this read endpoint previously had no authorization check at
+        // all — any authenticated staff account could enumerate coworkers'
+        // shifts. Same rule as the write endpoints: owner/manager only.
+        $this->authorize('manageWorker', $user);
 
         $shifts = ShiftLog::where('user_id', $user->id)
             ->latest('shift_start')

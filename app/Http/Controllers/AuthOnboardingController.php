@@ -5,9 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Branch;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -58,39 +56,6 @@ class AuthOnboardingController extends Controller
     }
 
     // ── API Handlers ──────────────────────────────────────────────────
-
-    public function apiLogin(Request $request): RedirectResponse|JsonResponse
-    {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required', 'string'],
-        ]);
-
-        if ($request->expectsJson()) {
-            $user = User::where('email', $credentials['email'])->first();
-
-            if (! $user || ! Hash::check($credentials['password'], $user->password)) {
-                return response()->json(['message' => 'Invalid credentials.'], 401);
-            }
-
-            $user->tokens()->delete();
-            $token = $user->createToken('api-token');
-
-            return response()->json([
-                'token' => $token->plainTextToken,
-                'user' => $user,
-            ]);
-        }
-
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            $request->session()->regenerate();
-            return redirect()->intended(route('dashboard'));
-        }
-
-        return redirect()->route('login')
-            ->withInput($request->only('email'))
-            ->withErrors(['email' => 'These credentials do not match our records.']);
-    }
 
     /**
      * Register Step 1 — Create a pending User record.

@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AppSetting;
 use App\Models\Branch;
 use App\Models\BranchStock;
 use App\Models\DiscrepancyAlert;
+use App\Models\Ingredient;
+use App\Models\Product;
 use App\Models\ShiftLog;
 use App\Models\ShiftStockCount;
 use App\Models\Transaction;
@@ -122,8 +125,28 @@ class DashboardController extends Controller
                 'is_warning' => (int) ($alertsByBranch[$b->id] ?? 0) > 0,
             ]);
 
+        // ── First-run setup nudge ─────────────────────────────────────
+        // The dashboard is useless (and dishonest) without a catalog, so
+        // point brand-new owners at the wizard until the pipeline exists.
+        // Respects the skip flag; disappears forever once all three exist.
+        $setupNeeded = null;
+        if (AppSetting::get('setup_skipped_at') === null) {
+            $hasIngredients = Ingredient::exists();
+            $hasProducts = Product::exists();
+            $hasStock = BranchStock::exists();
+
+            if (! ($hasIngredients && $hasProducts && $hasStock)) {
+                $setupNeeded = [
+                    'has_ingredients' => $hasIngredients,
+                    'has_products' => $hasProducts,
+                    'has_stock' => $hasStock,
+                ];
+            }
+        }
+
         return view('dashboard', [
             'branch_health' => $branchHealth,
+            'setup_needed' => $setupNeeded,
             // Workforce headline. Resignations and employment type (full/part
             // time) are not in the schema, so the third tile uses role — the
             // workforce split we can actually report.

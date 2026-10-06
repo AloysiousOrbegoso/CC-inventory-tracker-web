@@ -52,6 +52,7 @@
     <div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:6px">Welcome to InvenTrackr!</div>
     <div style="font-size:13px;color:var(--text-2);margin-bottom:18px;max-width:400px;margin-left:auto;margin-right:auto">Get started by adding your first branch. Once you have branches, this dashboard will show revenue, alerts, stock levels, and employee status across your business.</div>
     <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <a href="{{ route('setup.index') }}" class="btn-pill" style="text-decoration:none">🚀 Start the Setup Wizard</a>
         <a href="{{ route('branches') }}" class="btn-pill" style="text-decoration:none">+ Add Your First Branch</a>
         <a href="{{ route('receipts.index') }}" class="btn-pill" style="text-decoration:none">+ Scan a Receipt</a>
     </div>
@@ -61,6 +62,20 @@
         <span>👥 Employee management</span>
         <span>🗺️ Map view</span>
     </div>
+</div>
+@elseif($setup_needed)
+<div class="ncard" style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:16px 20px;margin-bottom:20px;border:1.5px dashed var(--accent)">
+    <div>
+        <div style="font-size:14px;font-weight:800;color:var(--text)">⚙️ Finish setting up your stock pipeline</div>
+        <div style="font-size:12px;color:var(--text-2);margin-top:2px">
+            @if(!$setup_needed['has_ingredients']) Add your raw ingredients — @endif
+            @if(!$setup_needed['has_products']) build a product recipe so sales deduct stock — @endif
+            @if(!$setup_needed['has_stock']) and count your opening stock.
+            @else You're almost done — count your opening stock.
+            @endif
+        </div>
+    </div>
+    <a href="{{ route('setup.index') }}" class="btn-pill" style="text-decoration:none">Open Setup Wizard →</a>
 </div>
 @endif
 

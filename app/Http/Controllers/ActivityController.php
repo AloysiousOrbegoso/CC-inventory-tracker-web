@@ -14,15 +14,7 @@ class ActivityController extends Controller
      */
     public function __invoke(Request $request, User $user): JsonResponse
     {
-        $authUser = $request->user();
-
-        // Authorize — super_admin sees all, managers see their branch only
-        if (! $authUser->isSuperAdmin() && ! $authUser->isManager()) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
-        if ($authUser->isManager() && $authUser->branch_id !== $user->branch_id) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
+        $this->authorize('viewActivity', $user);
 
         $type = $request->query('type', 'transactions');
 

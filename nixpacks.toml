@@ -1,2 +1,8 @@
 [variables]
 NIXPACKS_NODE_VERSION = "22"
+
+# Receipt OCR (OcrService shells out to the `tesseract` binary) — without it
+# POST /api/receipts/scan 500s in production. '...' extends the PHP
+# provider's default package list instead of replacing it.
+[phases.setup]
+nixPkgs = ['...', 'tesseract']

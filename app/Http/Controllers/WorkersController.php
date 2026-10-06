@@ -12,6 +12,10 @@ use Illuminate\Validation\Rule;
 
 class WorkersController extends Controller
 {
+    /**
+     * Roles that can be managed as "workers". Attempts to manage anything
+     * outside this set (i.e. the owner account) are reported as 404.
+     */
     private const MANAGED_ROLES = [User::ROLE_STAFF, User::ROLE_MANAGER];
 
     /**
@@ -73,6 +77,8 @@ class WorkersController extends Controller
     {
         $authUser = $request->user();
 
+        // Only managers and the owner manage workers at all — enforced here
+        // (not in the policy) because a branch isn't known until validation.
         if (! $authUser->isManager() && ! $authUser->isSuperAdmin()) {
             return response()->json(['message' => 'Forbidden.'], 403);
         }
@@ -119,15 +125,7 @@ class WorkersController extends Controller
             return response()->json(['message' => 'Worker not found.'], 404);
         }
 
-        $authUser = $request->user();
-
-        if (! $authUser->isManager() && ! $authUser->isSuperAdmin()) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
-
-        if ($authUser->isManager() && $authUser->branch_id !== $user->branch_id) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
+        $this->authorize('manageWorker', $user);
 
         $validated = $request->validate([
             'name'      => ['sometimes', 'string', 'max:255'],
@@ -136,6 +134,10 @@ class WorkersController extends Controller
             'branch_id' => ['sometimes', 'exists:branches,id'],
             'role'      => ['sometimes', 'in:staff,manager'],
         ]);
+
+        $authUser = $request->user();
+
+        $worker = $user;
 
         if (isset($validated['branch_id'])
             && $authUser->isManager()
@@ -153,16 +155,16 @@ class WorkersController extends Controller
             $data['pin'] = $validated['pin'];
         }
 
-        $user->update($data);
+        $worker->update($data);
 
         return response()->json([
             'message' => 'Worker updated successfully.',
             'staff'   => [
-                'id'        => $user->id,
-                'name'      => $user->name,
-                'email'     => $user->email,
-                'role'      => $user->role,
-                'branch_id' => $user->branch_id,
+                'id'        => $worker->id,
+                'name'      => $worker->name,
+                'email'     => $worker->email,
+                'role'      => $worker->role,
+                'branch_id' => $worker->branch_id,
             ],
         ]);
     }
@@ -176,15 +178,7 @@ class WorkersController extends Controller
             return response()->json(['message' => 'Worker not found.'], 404);
         }
 
-        $authUser = $request->user();
-
-        if (! $authUser->isManager() && ! $authUser->isSuperAdmin()) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
-
-        if ($authUser->isManager() && $authUser->branch_id !== $user->branch_id) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
+        $this->authorize('manageWorker', $user);
 
         $rules = [];
         foreach (self::PROFILE_FIELDS as $field) {
@@ -226,13 +220,7 @@ class WorkersController extends Controller
 
         $authUser = $request->user();
 
-        if (! $authUser->isManager() && ! $authUser->isSuperAdmin()) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
-
-        if ($authUser->isManager() && $authUser->branch_id !== $user->branch_id) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
+        $this->authorize('manageWorker', $user);
 
         if ($user->id === $authUser->id) {
             return response()->json(['message' => 'You cannot delete your own account.'], 422);
@@ -249,15 +237,7 @@ class WorkersController extends Controller
             return response()->json(['message' => 'Worker not found.'], 404);
         }
 
-        $authUser = $request->user();
-
-        if (! $authUser->isManager() && ! $authUser->isSuperAdmin()) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
-
-        if ($authUser->isManager() && $authUser->branch_id !== $user->branch_id) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
+        $this->authorize('manageWorker', $user);
 
         $validated = $request->validate([
             'comment' => ['required', 'string', 'max:1000'],
@@ -266,7 +246,7 @@ class WorkersController extends Controller
 
         $review = PeerReview::create([
             'reviewee_id' => $user->id,
-            'reviewer_id' => $authUser->id,
+            'reviewer_id' => $request->user()->id,
             'comment'     => $validated['comment'],
             'rating'      => $validated['rating'] ?? null,
         ]);
@@ -279,15 +259,9 @@ class WorkersController extends Controller
 
     public function destroyPeerReview(Request $request, PeerReview $peerReview): JsonResponse
     {
-        $authUser = $request->user();
-
-        if (! $authUser->isManager() && ! $authUser->isSuperAdmin()) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
-
-        if ($authUser->isManager() && $authUser->branch_id !== $peerReview->reviewee->branch_id) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
+        // The reviewee's branch determines authorization — a manager may only
+        // touch reviews belonging to workers of their own branch.
+        $this->authorize('manageWorker', $peerReview->reviewee);
 
         $peerReview->delete();
 
@@ -300,15 +274,7 @@ class WorkersController extends Controller
             return response()->json(['message' => 'Worker not found.'], 404);
         }
 
-        $authUser = $request->user();
-
-        if (! $authUser->isManager() && ! $authUser->isSuperAdmin()) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
-
-        if ($authUser->isManager() && $authUser->branch_id !== $user->branch_id) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
+        $this->authorize('manageWorker', $user);
 
         $validated = $request->validate([
             'title'       => ['required', 'string', 'max:255'],
@@ -317,7 +283,7 @@ class WorkersController extends Controller
 
         $goal = EmployeeGoal::create([
             'user_id'     => $user->id,
-            'created_by'  => $authUser->id,
+            'created_by'  => $request->user()->id,
             'title'       => $validated['title'],
             'target_date' => $validated['target_date'] ?? null,
         ]);
@@ -327,15 +293,7 @@ class WorkersController extends Controller
 
     public function updateGoalStatus(Request $request, EmployeeGoal $goal): JsonResponse
     {
-        $authUser = $request->user();
-
-        if (! $authUser->isManager() && ! $authUser->isSuperAdmin()) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
-
-        if ($authUser->isManager() && $authUser->branch_id !== $goal->user->branch_id) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
+        $this->authorize('manageWorker', $goal->user);
 
         $validated = $request->validate([
             'status' => ['required', 'in:pending,in_progress,completed'],
@@ -348,15 +306,7 @@ class WorkersController extends Controller
 
     public function destroyGoal(Request $request, EmployeeGoal $goal): JsonResponse
     {
-        $authUser = $request->user();
-
-        if (! $authUser->isManager() && ! $authUser->isSuperAdmin()) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
-
-        if ($authUser->isManager() && $authUser->branch_id !== $goal->user->branch_id) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
+        $this->authorize('manageWorker', $goal->user);
 
         $goal->delete();
 
