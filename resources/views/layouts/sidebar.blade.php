@@ -41,7 +41,7 @@
         .sidebar__link {
             display: flex; align-items: center; gap: 12px;
             padding: 9px 14px; border-radius: 10px;
-            font-size: 13.5px; font-weight: 600; color: var(--text-2);
+            font-size: 13.5px; font-weight: 600; color: black;
             border-left: 3px solid transparent;
             text-decoration: none; transition: all .15s;
         }
@@ -65,7 +65,7 @@
         .sidebar__group-header {
             display: flex; align-items: center; gap: 8px;
             padding: 8px 14px; border-radius: 8px;
-            font-size: 11px; font-weight: 700; color: var(--text-3);
+            font-size: 11px; font-weight: 700; color: black;
             text-transform: uppercase; letter-spacing: .06em;
             cursor: pointer; user-select: none;
             transition: all .15s;
@@ -435,7 +435,7 @@
 
             <a href="{{ route('settings') }}" class="topbar__user">
                 <span class="avatar">{{ $initials }}</span>
-                <span>
+                <span class="account-span">
                     <span class="topbar__user-name">{{ $user->name }}</span><br>
                     <span class="topbar__user-email">{{ $user->email }}</span>
                 </span>

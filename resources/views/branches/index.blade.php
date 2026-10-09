@@ -136,6 +136,78 @@
 
     .flash-success { background: #dcfce7; border: 1px solid #16a34a; color: #166534; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; }
     .flash-error { background: #fee2e2; border: 1px solid #dc2626; color: #991b1b; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; }
+
+
+/* Disown Business Confirmation Modal */
+.disown-modal-content {
+    max-width: 420px;
+    text-align: center;
+}
+
+.disown-icon {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 18px;
+    border-radius: 50%;
+    background: #fee2e2;
+    color: #dc2626;
+    font-size: 32px;
+    font-weight: 700;
+}
+
+.disown-modal-content .modal-title {
+    margin-bottom: 12px;
+}
+
+.disown-modal-content .modal-subtitle {
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.disown-modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.disown-modal-actions button {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s ease;
+}
+
+.btn-cancel {
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text);
+}
+
+.btn-cancel:hover {
+    background: var(--bg);
+}
+
+.disown-modal-actions .btn-danger {
+    padding: 12px 16px;
+}
+
+@media (max-width: 420px) {
+    .disown-modal-content {
+        padding: 24px 18px;
+    }
+
+    .disown-modal-actions {
+        flex-direction: column-reverse;
+    }
+}
+
 @endsection
 
 @section('content')
@@ -302,85 +374,140 @@
         <h2 class="modal-title">Register a new business</h2>
         <p class="modal-subtitle">Please provide the needed paperwork for the new business.</p>
 
-        <form action="{{ route('branches.store') }}" method="POST">
+        <form action="{{ route('branches.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
+
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Business Name</label>
-                    <input type="text" name="name" class="form-input" placeholder="Enter your business name" required>
+                    <input type="text" name="name" class="form-input"
+                        placeholder="Enter your business name" required>
                 </div>
+
                 <div class="form-group">
                     <label class="form-label">Business Description</label>
-                    <textarea name="description" class="form-input form-textarea" placeholder="Enter a short description of your business"></textarea>
+                    <textarea name="description" class="form-input form-textarea"
+                        placeholder="Enter a short description of your business"
+                        required></textarea>
                 </div>
             </div>
+
             <div style="margin-bottom:20px;">
-                <label class="form-label" style="margin-bottom:10px;display:block;">📍 Address</label>
+                <label class="form-label" style="margin-bottom:10px;display:block;">
+                    📍 Address
+                </label>
+
                 <div class="form-row" style="margin-bottom:0;">
                     <div class="form-group">
-                        <label class="form-label" style="font-size:12px;color:var(--text-2);">Street Address</label>
-                        <input type="text" name="street_address" class="form-input" placeholder="e.g. 123 Rizal Avenue">
+                        <label class="form-label" style="font-size:12px;color:var(--text-2);">
+                            Street Address
+                        </label>
+                        <input type="text" name="street_address" class="form-input"
+                            placeholder="e.g. 123 Rizal Avenue" required>
                     </div>
+
                     <div class="form-group">
-                        <label class="form-label" style="font-size:12px;color:var(--text-2);">City / Municipality</label>
-                        <input type="text" name="city" class="form-input" placeholder="e.g. Makati City">
+                        <label class="form-label" style="font-size:12px;color:var(--text-2);">
+                            City / Municipality
+                        </label>
+                        <input type="text" name="city" class="form-input"
+                            placeholder="e.g. Makati City" required>
                     </div>
                 </div>
+
                 <div class="form-row" style="margin-bottom:0;">
                     <div class="form-group">
-                        <label class="form-label" style="font-size:12px;color:var(--text-2);">Province</label>
-                        <input type="text" name="province" class="form-input" placeholder="e.g. Metro Manila">
+                        <label class="form-label" style="font-size:12px;color:var(--text-2);">
+                            Province
+                        </label>
+                        <input type="text" name="province" class="form-input"
+                            placeholder="e.g. Metro Manila" required>
                     </div>
+
                     <div class="form-group">
-                        <label class="form-label" style="font-size:12px;color:var(--text-2);">Zip Code</label>
-                        <input type="text" name="zip_code" class="form-input" placeholder="e.g. 1230">
+                        <label class="form-label" style="font-size:12px;color:var(--text-2);">
+                            Zip Code
+                        </label>
+                        <input type="text" name="zip_code" class="form-input"
+                            placeholder="e.g. 1230" required>
                     </div>
                 </div>
             </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Phone Number</label>
-                    <input type="tel" name="phone" class="form-input" placeholder="e.g. +63 917 123 4567">
+                    <input type="tel" name="phone" class="form-input"
+                        placeholder="e.g. +63 917 123 4567" required>
                 </div>
+
                 <div class="form-group">
                     <label class="form-label">Email Address</label>
-                    <input type="email" name="email" class="form-input" placeholder="e.g. info@mybusiness.ph">
+                    <input type="email" name="email" class="form-input"
+                        placeholder="e.g. info@mybusiness.ph" required>
                 </div>
             </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">DTI Registration</label>
-                    <div class="file-upload">
-                        <span>Upload a PDF of your DTI Business Name Registration</span>
-                        <span class="file-upload__icon">📄</span>
-                    </div>
+                    <input type="file" name="dti_registration"
+                        class="form-input" accept="application/pdf,.pdf" required>
+                    <small>Upload a PDF of your DTI Business Name Registration.</small>
                 </div>
+
                 <div class="form-group">
                     <label class="form-label">SEC Registration</label>
-                    <div class="file-upload">
-                        <span>Upload a PDF of your Certificate of Registration</span>
-                        <span class="file-upload__icon">📄</span>
-                    </div>
+                    <input type="file" name="sec_registration"
+                        class="form-input" accept="application/pdf,.pdf" required>
+                    <small>Upload a PDF of your Certificate of Registration.</small>
                 </div>
             </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">BIR Registration</label>
-                    <div class="file-upload">
-                        <span>Upload a PDF of your Certificate of Registration (COR)</span>
-                        <span class="file-upload__icon">📄</span>
-                    </div>
+                    <input type="file" name="bir_registration"
+                        class="form-input" accept="application/pdf,.pdf" required>
+                    <small>Upload a PDF of your Certificate of Registration (COR).</small>
                 </div>
+
                 <div class="form-group">
                     <label class="form-label">LGU Permit</label>
-                    <div class="file-upload">
-                        <span>Upload a PDF of your Mayor's Permit</span>
-                        <span class="file-upload__icon">📄</span>
-                    </div>
+                    <input type="file" name="lgu_permit"
+                        class="form-input" accept="application/pdf,.pdf" required>
+                    <small>Upload a PDF of your Mayor's Permit.</small>
                 </div>
             </div>
+
             <button type="submit" class="btn-submit">Add new business</button>
         </form>
+    </div>
+</div>
+
+<!-- Disown Business Confirmation Modal -->
+<div class="modal-overlay" id="disownBusinessModal">
+    <div class="modal-content disown-modal-content">
+        <div class="disown-icon">!</div>
+
+        <h2 class="modal-title">Disown Business?</h2>
+
+        <p class="modal-subtitle">
+            Are you sure you want to disown this business?
+            You may lose access to its information and management features.
+        </p>
+
+        <div class="disown-modal-actions">
+            <button type="button" class="btn-cancel"
+                onclick="closeDisownModal()">
+                Cancel
+            </button>
+
+            <button type="button" class="btn-danger"
+                onclick="confirmDisownBusiness()">
+                Yes, Disown Business
+            </button>
+        </div>
     </div>
 </div>
 
@@ -504,5 +631,23 @@ document.getElementById('recipeSearchInput').addEventListener('input', function(
 
 function editDescription() { console.log('Edit description clicked'); }
 function disownBusiness() { if (confirm('Are you sure you want to disown this business?')) { console.log('Disown business clicked'); } }
+
+function disownBusiness() {
+    document.getElementById('disownBusinessModal')
+        .classList.add('active');
+}
+
+function closeDisownModal() {
+    document.getElementById('disownBusinessModal')
+        .classList.remove('active');
+}
+
+function confirmDisownBusiness() {
+    closeDisownModal();
+
+    // TODO: Add the actual disown business action here.
+    console.log('Disown business confirmed');
+}
+
 </script>
 @endsection

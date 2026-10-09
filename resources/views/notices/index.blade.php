@@ -19,32 +19,94 @@
         <div class="card p-5">
             <div class="flex items-start justify-between gap-3">
                 <div>
-                    <div class="text-[14px] font-extrabold">{{ $notice->title }}</div>
+                    <div class="text-[14px] font-extrabold">
+                        {{ $notice->title }}
+                    </div>
+
                     <div class="text-[11px] text-ink-3 mt-0.5">
-                        {{ $notice->poster?->name ?? 'System' }} · {{ $notice->branch?->name ?? 'All branches' }} · {{ $notice->created_at->diffForHumans() }}
+                        {{ $notice->poster?->name ?? 'System' }}
+                        ·
+                        {{ $notice->branch?->name ?? 'All branches' }}
+                        ·
+                        {{ $notice->created_at->diffForHumans() }}
                     </div>
                 </div>
+
                 @if (auth()->id() === $notice->posted_by || auth()->user()->isSuperAdmin())
-                    <button class="btn-sm danger shrink-0" onclick="deleteNotice({{ $notice->id }}, '{{ addslashes($notice->title) }}')">Delete</button>
+                    <button
+                        type="button"
+                        class="btn-sm danger shrink-0"
+                        onclick="deleteNotice({{ $notice->id }}, @js($notice->title))"
+                    >
+                        Delete
+                    </button>
                 @endif
             </div>
+
             <p class="text-[13px] text-ink mt-2.5 leading-relaxed whitespace-pre-line">{{ $notice->body }}</p>
         </div>
     @empty
         <div class="card" style="text-align:center;padding:32px 20px">
             <div style="font-size:32px;margin-bottom:8px">📬</div>
-            <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">No messages yet</div>
-            <div style="font-size:12px;color:var(--text-2);margin-bottom:12px">Post company-wide notices, schedule updates, or announcements for your team.</div>
+
+            <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">
+                No messages yet
+            </div>
+
+            <div style="font-size:12px;color:var(--text-2);margin-bottom:12px">
+                Post company-wide notices, schedule updates, or announcements for your team.
+            </div>
+
             <div style="padding:10px 14px;background:var(--bg);border-radius:8px;text-align:left;font-size:11px;color:var(--text-2);max-width:260px;margin:0 auto">
-                <div style="font-weight:600;color:var(--text);margin-bottom:4px">💡 Good for:</div>
+                <div style="font-weight:600;color:var(--text);margin-bottom:4px">
+                    💡 Good for:
+                </div>
                 <div style="margin-bottom:3px">• Holiday schedule changes</div>
                 <div style="margin-bottom:3px">• New policy announcements</div>
                 <div style="margin-bottom:3px">• Team shoutouts and recognition</div>
                 <div>• Urgent operational updates</div>
             </div>
-            <button class="btn-primary" style="margin-top:14px" onclick="openComposeModal()">+ Post First Message</button>
+
+            <button
+                type="button"
+                class="btn-primary"
+                style="margin-top:14px"
+                onclick="openComposeModal()"
+            >
+                + Post First Message
+            </button>
         </div>
     @endforelse
+</div>
+
+{{-- DELETE NOTICE MODAL --}}
+<div id="deleteNoticeModal" class="modal-overlay">
+    <div class="modal-box w-full max-w-md">
+        <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600">
+            <svg width="24" height="24" fill="none" stroke="currentColor"
+                 stroke-width="2" viewBox="0 0 24 24">
+                <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
+                <path d="M10 11v5M14 11v5"/>
+            </svg>
+        </div>
+
+        <h2 class="text-lg font-extrabold mb-2">Delete Notice?</h2>
+        <p class="text-sm text-ink-2">
+            Are you sure you want to delete
+            <strong id="deleteNoticeTitle" class="text-ink"></strong>?
+            This action cannot be undone.
+        </p>
+
+        <div class="modal-footer mt-6">
+            <button type="button" class="btn-cancel" onclick="closeDeleteNoticeModal()">
+                Cancel
+            </button>
+            <button type="button" id="confirmDeleteBtn" class="btn-save"
+                    style="background:#dc2626" onclick="confirmDeleteNotice()">
+                Delete Notice
+            </button>
+        </div>
+    </div>
 </div>
 
 {{-- COMPOSE MODAL --}}
@@ -93,12 +155,56 @@ async function submitCompose(e) {
     else { alert('Error posting message.'); btn.disabled = false; btn.textContent = 'Post Message'; }
 }
 
-async function deleteNotice(id, title) {
-    if (!confirm(`Delete "${title}"?`)) return;
-    const res = await fetch(`{{ url('/mail') }}/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' } });
-    if (res.ok) location.reload();
+let noticeToDelete = null;
+
+function deleteNotice(id, title) {
+    noticeToDelete = id;
+    document.getElementById('deleteNoticeTitle').textContent = `"${title}"`;
+    document.getElementById('deleteNoticeModal').classList.add('is-open');
 }
 
-document.querySelectorAll('.modal-overlay').forEach(el => el.addEventListener('click', e => { if (e.target === el) el.classList.remove('is-open'); }));
+function closeDeleteNoticeModal() {
+    document.getElementById('deleteNoticeModal').classList.remove('is-open');
+    noticeToDelete = null;
+}
+
+async function confirmDeleteNotice() {
+    if (noticeToDelete === null) return;
+
+    const btn = document.getElementById('confirmDeleteBtn');
+    btn.disabled = true;
+    btn.textContent = 'Deleting…';
+
+    try {
+        const res = await fetch(`{{ url('/mail') }}/${noticeToDelete}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': csrf,
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!res.ok) throw new Error();
+
+        location.reload();
+    } catch {
+        alert('Failed to delete notice. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'Delete Notice';
+    }
+}
+
+
+document.querySelectorAll('.modal-overlay').forEach(el => {
+    el.addEventListener('click', e => {
+        if (e.target !== el) return;
+
+        if (el.id === 'deleteNoticeModal') {
+            closeDeleteNoticeModal();
+        } else {
+            el.classList.remove('is-open');
+        }
+    });
+});
 </script>
 @endsection

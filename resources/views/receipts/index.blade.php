@@ -84,7 +84,7 @@
 
 {{-- SCAN RECEIPT MODAL --}}
 <div class="modal-overlay" id="scanModal">
-    <div class="modal-box">
+    <div class="modal-box p-5">
         <h2 class="text-lg font-extrabold mb-5">Scan Receipt</h2>
         <form id="scanForm" onsubmit="scanReceipt(event)">
             @if ($branches->count() > 1)
