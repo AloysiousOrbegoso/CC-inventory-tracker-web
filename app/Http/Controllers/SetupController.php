@@ -32,7 +32,7 @@ class SetupController extends Controller
         $user = $request->user();
 
         return view('setup.index', [
-            'status' => $this->status(),
+            'status' => $this->buildStatus(),
             'ingredients' => Ingredient::orderBy('name')->get(),
             'branches' => Branch::when($user->isManager(), fn ($q) => $q->where('id', $user->branch_id))
                 ->orderBy('name')
@@ -43,7 +43,7 @@ class SetupController extends Controller
 
     public function status(): JsonResponse
     {
-        return response()->json($this->status());
+        return response()->json($this->buildStatus());
     }
 
     /**
@@ -61,7 +61,7 @@ class SetupController extends Controller
         return response()->json([
             'message' => 'Ingredient added.',
             'ingredient' => $ingredient,
-            'status' => $this->status(),
+            'status' => $this->buildStatus(),
         ], 201);
     }
 
@@ -106,7 +106,7 @@ class SetupController extends Controller
         return response()->json([
             'message' => 'Product and recipe saved. Sales will now auto-deduct these ingredients.',
             'product' => $product->load('recipes'),
-            'status' => $this->status(),
+            'status' => $this->buildStatus(),
         ], 201);
     }
 
@@ -171,7 +171,7 @@ class SetupController extends Controller
                 . ($skipped > 0 ? ", {$skipped} already stocked and left as-is." : '.'),
             'created' => $created,
             'skipped' => $skipped,
-            'status' => $this->status(),
+            'status' => $this->buildStatus(),
         ], 201);
     }
 
@@ -183,7 +183,7 @@ class SetupController extends Controller
     {
         AppSetting::set('setup_skipped_at', now()->toDateTimeString());
 
-        return response()->json(['message' => 'Setup dismissed. You can always reach it at /setup.', 'status' => $this->status()]);
+        return response()->json(['message' => 'Setup dismissed. You can always reach it at /setup.', 'status' => $this->buildStatus()]);
     }
 
     /**
@@ -193,7 +193,7 @@ class SetupController extends Controller
      *
      * @return array{has_ingredients: bool, has_products: bool, has_stock: bool, complete: bool, skipped: bool}
      */
-    private function status(): array
+    private function buildStatus(): array
     {
         $hasIngredients = Ingredient::exists();
         $hasProducts = Product::exists();
