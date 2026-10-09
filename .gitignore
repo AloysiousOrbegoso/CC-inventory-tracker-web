@@ -27,3 +27,7 @@ Homestead.yaml
 Thumbs.db
 *.sqlite
 nul
+
+# Temporary development files
+.freebuff/
+.tmp-php-ini/
